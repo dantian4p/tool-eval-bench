@@ -187,42 +187,53 @@ def _position_bars(rates: dict[int, float], max_positions: int = 8, bar_width: i
 
 def _position_bars_horizontal(
     rates: dict[int, float],
-    max_positions: int = 8,
+    max_positions: int = 16,
     inner_w: int = 80,
 ) -> Table:
-    """Render per-position acceptance rates as a single horizontal row.
+    """Render per-position acceptance rates as horizontal inline bars.
 
-    Each position gets an inline bar + percentage, laid out side-by-side
-    to fill the full width of the dashboard.
+    Automatically wraps to multiple rows when there are too many positions
+    to fit in a single line (e.g., k=12 at 80 columns gets 2 rows of 6).
     """
     positions = sorted(rates.keys())[:max_positions]
     if not positions:
         return Table.grid()
 
-    n = len(positions)
-    # Each cell needs: label(3) + bar + pct(5) + padding
-    cell_w = max(12, (inner_w - 4) // n - 2)
+    # Determine how many positions fit per row (min cell width: 14 chars)
+    min_cell_w = 14  # "p0 ████ 83%" needs ~14 chars minimum
+    per_row = max(1, (inner_w - 4) // min_cell_w)
+    per_row = min(per_row, len(positions))  # don't exceed actual count
+
+    # Compute bar width from actual cells-per-row
+    cell_w = max(min_cell_w, (inner_w - 4) // per_row - 2)
     bar_w = max(4, cell_w - 10)  # reserve space for "p0 " + " 83%"
 
     table = Table.grid(padding=(0, 1), expand=True)
-    for _ in positions:
+    for _ in range(per_row):
         table.add_column(no_wrap=True)
 
-    cells = []
-    for pos in positions:
-        rate = rates[pos]
-        color = _ar_color(rate)
-        filled = int(rate * bar_w)
-        filled = max(0, min(bar_w, filled))
+    # Build cells and add rows
+    for row_start in range(0, len(positions), per_row):
+        row_positions = positions[row_start:row_start + per_row]
+        cells = []
+        for pos in row_positions:
+            rate = rates[pos]
+            color = _ar_color(rate)
+            filled = int(rate * bar_w)
+            filled = max(0, min(bar_w, filled))
 
-        cell = Text()
-        cell.append(f"p{pos} ", style="bold dim")
-        cell.append("█" * filled, style=f"{color}")
-        cell.append("░" * (bar_w - filled), style="dim")
-        cell.append(f" {rate * 100:.0f}%", style=f"bold {color}")
-        cells.append(cell)
+            cell = Text()
+            cell.append(f"p{pos} ", style="bold dim")
+            cell.append("\u2588" * filled, style=f"{color}")
+            cell.append("\u2591" * (bar_w - filled), style="dim")
+            cell.append(f" {rate * 100:.0f}%", style=f"bold {color}")
+            cells.append(cell)
 
-    table.add_row(*cells)
+        # Pad with empty cells if the last row is short
+        while len(cells) < per_row:
+            cells.append(Text(""))
+
+        table.add_row(*cells)
     return table
 
 
@@ -243,6 +254,7 @@ def _spec_method_label(method: str) -> tuple[str, str]:
         "mtp": ("Multi-Token Prediction", "bold bright_yellow"),
         "eagle": ("EAGLE", "bold bright_green"),
         "eagle3": ("EAGLE-3", "bold bright_green"),
+        "mlp_speculator": ("MLP Speculator", "bold bright_cyan"),
         "ngram": ("N-Gram", "bold bright_magenta"),
         "draft_model": ("Draft Model", "bold bright_cyan"),
         "unknown": ("Speculative Decoding", "bold dim"),
@@ -413,6 +425,16 @@ def _build_dashboard(
     left_text.append("\n ", style="")
     left_text.append(" ▸ ", style="dim cyan")
     left_text.append(model_name, style="bold cyan")
+
+    # Show draft model name if Prometheus labels reveal a model different from primary
+    if delta is not None and delta.model_names:
+        # The primary model is usually the longest name or matches model_name.
+        # Any additional model names are likely draft models.
+        other_models = {m for m in delta.model_names if m != model_name}
+        if other_models:
+            draft_name = sorted(other_models)[0]  # pick deterministically
+            left_text.append("  ← ", style="dim")
+            left_text.append(draft_name, style="dim italic cyan")
 
     right_text = Text()
     right_text.append(f"⏱  {_format_uptime(uptime)}", style="dim")
@@ -755,6 +777,7 @@ async def run_spec_live(
     metrics_url: str | None = None,
     model_name: str = "unknown",
     poll_interval: float = _POLL_INTERVAL,
+    spec_method: str | None = None,
 ) -> None:
     """Run the live speculative decoding monitor (blocking).
 
@@ -884,6 +907,10 @@ async def run_spec_live(
 
                             history.append(delta)
                             last_delta = delta
+
+                            # Override spec method if user specified --spec-method
+                            if spec_method is not None:
+                                delta.spec_method = spec_method
                         prev_snap = snap
                     elif snap is not None and prev_snap is None:
                         # First scrape, no spec decode counters yet — store for next

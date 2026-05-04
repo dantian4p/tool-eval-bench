@@ -251,7 +251,7 @@ tool-eval-bench --perf --spec-bench --seed 42
 | Spec-Decode Flag | Default | Purpose |
 |---|---|---|
 | `--spec-bench` | off | Run speculative decoding benchmark |
-| `--spec-method` | `auto` | Method hint: `auto`, `mtp`, `draft`, `ngram`, `eagle` |
+| `--spec-method` | `auto` | Method hint: `auto`, `mtp`, `draft`, `dflash`, `ngram`, `eagle` |
 | `--baseline-tgs` | — | Known baseline tg t/s for speedup calculation |
 | `--spec-prompts` | `filler,code,structured` | Prompt types to test |
 | `--metrics-url` | auto | Direct URL to Prometheus `/metrics` (e.g. `http://vllm:8080/metrics`) |
@@ -289,6 +289,9 @@ tool-eval-bench --spec-live
 # Custom poll interval (default: 1 second)
 tool-eval-bench --spec-live --spec-live-interval 2
 
+# Tell the dashboard which spec method you're running
+tool-eval-bench --spec-live --spec-method dflash
+
 # Point at vLLM metrics directly (when API is behind a proxy)
 tool-eval-bench --spec-live --metrics-url http://vllm:8080/metrics
 ```
@@ -296,8 +299,8 @@ tool-eval-bench --spec-live --metrics-url http://vllm:8080/metrics
 The dashboard shows:
 - **Acceptance rate gauge** — color-coded 0–100% bar with efficiency rating
 - **Draft efficiency gauge** — τ/window utilization with auto-tuning hints
-- **Method detection badge** — auto-detects dflash, MTP, EAGLE, N-Gram, or generic draft model from Prometheus metrics
-- **Per-position acceptance bars** — full-width horizontal chart showing per-position acceptance rate decay (`p0 ████ 83%  p1 ███ 64% ...`) with decay analysis
+- **Method detection badge** — shows the speculative decoding method in the header (`⟨ Draft Flash ⟩`, `⟨ MTP ⟩`, `⟨ EAGLE ⟩`, etc.).  Auto-detects from Prometheus text when possible; use `--spec-method` to set explicitly since most servers don't expose the method in metrics.
+- **Per-position acceptance bars** — full-width horizontal chart showing per-position acceptance rate decay (`p0 ████ 83%  p1 ███ 64% ...`) with decay analysis.  Supports up to 16 positions and auto-wraps to multiple rows on narrow terminals.
 - **Throughput sparklines** — rolling 60-second history of accept rate, gen t/s, accepted t/s, and waste ratio with min/max annotations
 - **Rolling averages** — session-level mean α, gen t/s, and accepted t/s (visible immediately with 0.0 initial values)
 - **Engine status** — GPU KV cache, prefix cache hit rate, running/waiting requests, prompt t/s
@@ -311,6 +314,7 @@ On exit (Ctrl+C), a session summary panel shows aggregate statistics.
 |---|---|---|
 | `--spec-live` | off | Start live speculative decoding monitor |
 | `--spec-live-interval` | `1.0` | Seconds between metric scrapes |
+| `--spec-method` | `auto` | Method hint: `auto`, `mtp`, `draft`, `dflash`, `ngram`, `eagle` |
 | `--metrics-url` | auto | Direct URL to Prometheus `/metrics` endpoint |
 
 > **Implementation note.** vLLM updates its Prometheus gauge metrics (gen t/s, prompt t/s, KV cache) on a ~10-second internal interval. `--spec-live` handles this by retaining the last non-zero reading for throughput gauges so the dashboard doesn't flicker to zero between updates. Per-position acceptance rates are parsed from `spec_decode_num_accepted_tokens_per_pos_total` counters (vLLM v1) and converted to rates; gauge-format rates are also supported as a fallback.

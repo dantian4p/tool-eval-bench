@@ -157,12 +157,18 @@ _PER_POSITION_COUNTER_PATTERN = re.compile(
 # or raw text keywords in the /metrics response.  Order matters: most specific
 # first ("dflash" before generic "draft").
 _SPEC_METHOD_HINTS: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r"dflash", re.IGNORECASE), "dflash"),
+    (re.compile(r"draft[_\s]?flash|dflash", re.IGNORECASE), "dflash"),
     (re.compile(r"eagle3", re.IGNORECASE), "eagle3"),
     (re.compile(r"eagle", re.IGNORECASE), "eagle"),
     (re.compile(r"\bmtp\b|multi[_-]?token", re.IGNORECASE), "mtp"),
+    (re.compile(r"mlp_speculator", re.IGNORECASE), "mlp_speculator"),
     (re.compile(r"\bngram\b|prompt_lookup", re.IGNORECASE), "ngram"),
 ]
+
+# Extract model_name labels from spec_decode metrics — used to detect draft model identity
+_MODEL_NAME_LABEL = re.compile(
+    r'model_name="([^"]+)"',
+)
 
 
 def _detect_spec_method(text: str) -> str:
@@ -170,7 +176,7 @@ def _detect_spec_method(text: str) -> str:
 
     Scans HELP/TYPE/label strings and raw text for keywords that indicate
     the speculative decoding method being used.  Returns one of:
-    dflash, eagle3, eagle, mtp, ngram, draft_model, or unknown.
+    dflash, eagle3, eagle, mtp, mlp_speculator, ngram, draft_model, or unknown.
     """
     for pattern, method in _SPEC_METHOD_HINTS:
         if pattern.search(text):
@@ -180,6 +186,11 @@ def _detect_spec_method(text: str) -> str:
     if "spec_decode" in text:
         return "draft_model"
     return "unknown"
+
+
+def _extract_model_names(text: str) -> set[str]:
+    """Extract all unique model_name label values from Prometheus text."""
+    return set(_MODEL_NAME_LABEL.findall(text))
 
 
 @dataclass
@@ -214,6 +225,9 @@ class MetricsSnapshot:
 
     # Detected speculative decoding method (dflash, mtp, eagle, etc.)
     spec_method: str = "unknown"
+
+    # Model names found in Prometheus metric labels
+    model_names: set[str] = field(default_factory=set)
 
     # -- llama.cpp metrics --
     llamacpp_prompt_tokens_total: float = 0.0
@@ -287,6 +301,9 @@ class SpecLiveDelta:
     # Detected speculative decoding method
     spec_method: str = "unknown"
 
+    # Model names found in Prometheus metric labels
+    model_names: set[str] = field(default_factory=set)
+
     # Inferred num_speculative_tokens (from cumulative draft window)
     num_spec_tokens: int | None = None
 
@@ -321,6 +338,9 @@ def _parse_snapshot(text: str) -> MetricsSnapshot:
 
     # Detect speculative decoding method from raw text
     snap.spec_method = _detect_spec_method(text)
+
+    # Extract model names from metric labels
+    snap.model_names = _extract_model_names(text)
 
     return snap
 
@@ -414,6 +434,8 @@ def compute_delta(prev: MetricsSnapshot, curr: MetricsSnapshot) -> SpecLiveDelta
         total_drafts=int(curr.num_drafts),
         # Spec decode method
         spec_method=curr.spec_method,
+        # Model names from Prometheus labels
+        model_names=set(curr.model_names),
     )
 
     # --- Cumulative rates (always computed from totals) ---

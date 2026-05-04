@@ -4,6 +4,37 @@ All notable changes to `tool-eval-bench` are documented here.
 
 ## [Unreleased]
 
+## [1.5.1] — 2026-05-04
+
+### Added
+
+- **`--spec-method` works with `--spec-live`** — the method badge in the
+  dashboard header can now be set explicitly via `--spec-method dflash` (or
+  `mtp`, `eagle`, `ngram`, `draft`).  This is necessary because vLLM doesn't
+  expose the speculative decoding method in its Prometheus `/metrics` output,
+  making auto-detection impossible for most setups.  `dflash` was also added
+  as a new choice alongside the existing `auto`, `mtp`, `draft`, `ngram`,
+  and `eagle` options.
+- **Draft model name in header** — if Prometheus metric labels contain
+  `model_name` values for multiple models (target + draft), the dashboard
+  header now shows the draft model name: `▸ Qwen3.6-27B  ← Qwen3-0.6B`.
+- **`draft_flash` regex pattern** — method detection now matches `draft_flash`
+  and `draft flash` in addition to `dflash`, in case future vLLM versions
+  expose the method string in metric labels.
+- **`mlp_speculator` method detection** — added pattern and badge for IBM's
+  MLP speculator method.
+- **10 new tests** — covering `draft_flash` detection, `mlp_speculator`
+  detection/label, model name extraction from Prometheus labels, and
+  multi-row horizontal bar scaling (6, 12 positions, narrow terminal).
+  Total test count: **1,403**.
+
+### Fixed
+
+- **Per-position bars with >6 spec tokens** — increased `max_positions` from
+  8 to 16.  The horizontal bar layout now **auto-wraps to multiple rows** when
+  there are too many positions for the terminal width (minimum 14 chars per
+  cell).  For example, `k=12` at 100 columns renders as 2 rows of 6.
+
 ## [1.5.0] — 2026-05-03
 
 ### Added

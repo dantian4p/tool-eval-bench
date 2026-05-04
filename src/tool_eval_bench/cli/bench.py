@@ -976,7 +976,7 @@ def main() -> None:
     spec_grp.add_argument("--spec-live-interval", type=float, default=1.0, metavar="SEC",
                           help="Poll interval for --spec-live in seconds (default: 1.0)")
     spec_grp.add_argument("--spec-method", default="auto",
-                          choices=["auto", "mtp", "draft", "ngram", "eagle"],
+                          choices=["auto", "mtp", "draft", "dflash", "ngram", "eagle"],
                           help="Spec-decode method hint (default: auto-detect)")
     spec_grp.add_argument("--baseline-tgs", type=float, default=None, metavar="TPS",
                           help="Baseline tg t/s for speedup ratio calculation")
@@ -1146,6 +1146,11 @@ def main() -> None:
     if args.spec_live:
         from tool_eval_bench.cli.spec_live_display import run_spec_live
 
+        # Map CLI choice names to internal method identifiers
+        _method_map = {"draft": "draft_model"}
+        raw_method = args.spec_method
+        spec_method_hint = _method_map.get(raw_method, raw_method) if raw_method != "auto" else None
+
         try:
             asyncio.run(run_spec_live(
                 base_url,
@@ -1153,6 +1158,7 @@ def main() -> None:
                 metrics_url=args.metrics_url,
                 model_name=display_name,
                 poll_interval=args.spec_live_interval,
+                spec_method=spec_method_hint,
             ))
         except KeyboardInterrupt:
             pass

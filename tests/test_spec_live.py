@@ -1119,6 +1119,100 @@ class TestSpecMethodLabel:
         assert label == "Speculative Decoding"
         assert style == "bold dim"
 
+    def test_mlp_speculator_label(self):
+        from tool_eval_bench.cli.spec_live_display import _spec_method_label
+        label, _ = _spec_method_label("mlp_speculator")
+        assert label == "MLP Speculator"
+
+
+class TestDraftModelDetection:
+    """Test draft model name extraction and method detection improvements."""
+
+    def test_draft_flash_detected(self):
+        from tool_eval_bench.runner.spec_live import _detect_spec_method
+        assert _detect_spec_method("method: draft_flash") == "dflash"
+
+    def test_dflash_detected(self):
+        from tool_eval_bench.runner.spec_live import _detect_spec_method
+        assert _detect_spec_method("using dflash speculator") == "dflash"
+
+    def test_mlp_speculator_detected(self):
+        from tool_eval_bench.runner.spec_live import _detect_spec_method
+        assert _detect_spec_method("mlp_speculator active") == "mlp_speculator"
+
+    def test_model_names_extracted(self):
+        from tool_eval_bench.runner.spec_live import _extract_model_names
+        text = (
+            'vllm:spec_decode_num_accepted_tokens_total{model_name="Qwen/Qwen3-8B"} 100\n'
+            'vllm:generation_tokens_total{model_name="Qwen/Qwen3-8B"} 500\n'
+            'vllm:generation_tokens_total{model_name="Qwen/Qwen3-0.6B"} 200\n'
+        )
+        names = _extract_model_names(text)
+        assert names == {"Qwen/Qwen3-8B", "Qwen/Qwen3-0.6B"}
+
+    def test_model_names_empty(self):
+        from tool_eval_bench.runner.spec_live import _extract_model_names
+        text = "vllm:spec_decode_num_accepted_tokens_total 100\n"
+        names = _extract_model_names(text)
+        assert names == set()
+
+    def test_model_names_in_snapshot(self):
+        from tool_eval_bench.runner.spec_live import _parse_snapshot
+        text = (
+            'vllm:spec_decode_num_accepted_tokens_total{model_name="MainModel"} 100\n'
+            'vllm:spec_decode_num_draft_tokens_total{model_name="DraftModel"} 200\n'
+        )
+        snap = _parse_snapshot(text)
+        assert "MainModel" in snap.model_names
+        assert "DraftModel" in snap.model_names
+
+
+class TestHorizontalBarsScaling:
+    """Test horizontal per-position bars scale to many positions."""
+
+    def test_six_positions_single_row(self):
+        from tool_eval_bench.cli.spec_live_display import _position_bars_horizontal
+        from rich.console import Console
+        from io import StringIO
+
+        rates = {i: max(0.1, 0.9 - i * 0.15) for i in range(6)}
+        table = _position_bars_horizontal(rates, inner_w=120)
+        out = StringIO()
+        Console(file=out, width=120, no_color=True).print(table)
+        text = out.getvalue()
+        assert "p0" in text
+        assert "p5" in text
+
+    def test_twelve_positions_multi_row(self):
+        from tool_eval_bench.cli.spec_live_display import _position_bars_horizontal
+        from rich.console import Console
+        from io import StringIO
+
+        rates = {i: max(0.05, 0.9 - i * 0.07) for i in range(12)}
+        table = _position_bars_horizontal(rates, inner_w=100)
+        out = StringIO()
+        Console(file=out, width=100, no_color=True).print(table)
+        text = out.getvalue()
+        # All 12 positions should be rendered
+        for i in range(12):
+            assert f"p{i}" in text
+        # Should have multiple lines (wrapping)
+        lines = [line for line in text.strip().split("\n") if line.strip()]
+        assert len(lines) >= 2
+
+    def test_narrow_terminal_still_works(self):
+        from tool_eval_bench.cli.spec_live_display import _position_bars_horizontal
+        from rich.console import Console
+        from io import StringIO
+
+        rates = {i: max(0.1, 0.9 - i * 0.15) for i in range(6)}
+        table = _position_bars_horizontal(rates, inner_w=50)
+        out = StringIO()
+        Console(file=out, width=50, no_color=True).print(table)
+        text = out.getvalue()
+        assert "p0" in text
+        assert "p5" in text
+
 
 class TestDashboardSpecBadge:
     """Test dashboard renders spec method badge and num_spec_tokens."""
