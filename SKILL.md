@@ -95,6 +95,7 @@ tool-eval-bench --json --short
 | `--json-file PATH` | Write JSON to file instead of stdout |
 | `--short` | Run core 15 scenarios (~2 min) instead of full 69 |
 | `--probe` | Check server readiness and exit |
+| `--dry-run` | List scenarios that would run (no server needed) |
 | `--base-url URL` | Server endpoint |
 | `--model NAME` | Model name (auto-detected if omitted) |
 | `--seed N` | Random seed for reproducibility |
@@ -112,7 +113,7 @@ tool-eval-bench --json --short
 ```jsonc
 {
   "schema_version": "1",
-  "tool_eval_bench_version": "1.5.1",
+  "tool_eval_bench_version": "1.6.0",
   "final_score": 85,           // 0–100, the headline number
   "rating": "★★★★ Good",       // star rating with label
   "safety_warnings": [],       // empty = safe; non-empty = failures in safety scenarios
@@ -141,6 +142,22 @@ Each line on stderr is a JSON object:
 {"event": "benchmark_complete", "json_file": "results.json", "final_score": 85}
 {"event": "error", "error": "no_server", "message": "..."}
 ```
+
+## Error codes (structured)
+
+When `--json` mode emits an error event, the `error` field is one of:
+
+| Code | Exit | Meaning |
+|------|------|---------|
+| `connection_failed` | 2 | TCP connection refused, DNS failure, or timeout |
+| `http_error` | 2 | Server responded with 4xx/5xx status |
+| `detection_failed` | 2 | Unexpected exception during server probing |
+| `invalid_response` | 2 | Response body is not valid JSON |
+| `no_models` | 3 | Server responded but model list is empty |
+| `no_server` | 2 | Auto-discovery found no server on localhost |
+
+These constants are defined in `tool_eval_bench.domain.errors` for
+programmatic consumers.
 
 ## Programmatic API (Python)
 
@@ -201,3 +218,4 @@ else:
 3. **Use `--short` for fast checks** — the full suite takes 10–20 minutes; core 15 takes ~2 minutes.
 4. **Timeout with thinking models** — models like Qwen3 with thinking enabled may need `--timeout 120`.
 5. **Warmup is automatic** — the first request primes the server. Use `--no-warmup` only if already warmed.
+6. **Use `--dry-run` to preview** — before committing to a long run, check which scenarios would execute.

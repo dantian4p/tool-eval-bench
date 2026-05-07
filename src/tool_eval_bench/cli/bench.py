@@ -27,6 +27,14 @@ from dotenv import load_dotenv
 from rich.console import Console
 
 from tool_eval_bench.cli.display import BenchmarkDisplay
+from tool_eval_bench.domain.errors import (
+    CONNECTION_FAILED,
+    DETECTION_FAILED,
+    HTTP_ERROR,
+    INVALID_RESPONSE,
+    NO_MODELS,
+    NO_SERVER,
+)
 from tool_eval_bench.domain.scenarios import Category, ScenarioDefinition, ScenarioResult, ScenarioStatus
 from tool_eval_bench.runner.service import BenchmarkService
 from tool_eval_bench.storage.reports import MarkdownReporter
@@ -241,7 +249,7 @@ def _detect_model(
         resp.raise_for_status()
     except httpx.ConnectError:
         if headless:
-            _headless_error("connection_failed",
+            _headless_error(CONNECTION_FAILED,
                             f"Could not connect to {show_url}. Is the server running?",
                             exit_code=2)
         console.print("[bold red]✗ cannot connect[/]")
@@ -249,7 +257,7 @@ def _detect_model(
         sys.exit(1)
     except httpx.HTTPStatusError as exc:
         if headless:
-            _headless_error("http_error",
+            _headless_error(HTTP_ERROR,
                             f"Server returned {exc.response.status_code}. Check the URL and API key.",
                             exit_code=2)
         console.print(f"[bold red]✗ HTTP {exc.response.status_code}[/]")
@@ -257,7 +265,7 @@ def _detect_model(
         sys.exit(1)
     except Exception as exc:
         if headless:
-            _headless_error("detection_failed", str(exc), exit_code=2)
+            _headless_error(DETECTION_FAILED, str(exc), exit_code=2)
         console.print(f"[bold red]✗ {exc}[/]")
         sys.exit(1)
 
@@ -271,7 +279,7 @@ def _detect_model(
         model_list = data.get("data", [])
     except Exception:
         if headless:
-            _headless_error("invalid_response",
+            _headless_error(INVALID_RESPONSE,
                             "Server returned invalid JSON from /v1/models.",
                             exit_code=2)
         console.print("[bold red]✗ invalid response[/]")
@@ -293,7 +301,7 @@ def _detect_model(
 
     if not models:
         if headless:
-            _headless_error("no_models", "The server returned an empty model list.",
+            _headless_error(NO_MODELS, "The server returned an empty model list.",
                             exit_code=3)
         console.print("[bold red]✗ no models found[/]")
         console.print("[red]The server returned an empty model list.[/]")
@@ -1157,6 +1165,8 @@ def main() -> None:
                         help="Skip inference engine probing (no /version, /health HTTP calls)")
     output.add_argument("--output-dir", default=None, metavar="DIR",
                         help="Directory for report files (default: ./runs/)")
+    output.add_argument("--dry-run", action="store_true",
+                        help="Show which scenarios would run, then exit (no server needed)")
 
     # -- Throughput (llama-benchy) -----------------------------------------
     perf_grp = parser.add_argument_group("throughput benchmark (llama-benchy)")
@@ -1285,6 +1295,51 @@ def main() -> None:
         _compare_runs(console, args.compare[0], args.compare[1])
         return
 
+    # --dry-run: show what would run and exit (no server needed)
+    if args.dry_run:
+        scenarios = _resolve_scenarios(args)
+        from tool_eval_bench.domain.scenarios import CATEGORY_LABELS
+        if args.json:
+            import json as _json
+            cat_counts: dict[str, int] = {}
+            for s in scenarios:
+                cat_counts[s.category.value] = cat_counts.get(s.category.value, 0) + 1
+            out = {
+                "event": "dry_run",
+                "total_scenarios": len(scenarios),
+                "estimated_minutes": round(len(scenarios) * 0.3, 1),
+                "categories": {
+                    cat: {
+                        "label": CATEGORY_LABELS.get(
+                            next(s.category for s in scenarios if s.category.value == cat),
+                            cat,
+                        ),
+                        "count": count,
+                    }
+                    for cat, count in sorted(cat_counts.items())
+                },
+                "scenarios": [
+                    {"id": s.id, "title": s.title, "category": s.category.value}
+                    for s in scenarios
+                ],
+            }
+            sys.stdout.write(_json.dumps(out, indent=2) + "\n")
+        else:
+            console.print(f"\n[bold]Dry run:[/] {len(scenarios)} scenarios would execute\n")
+            console.print(f"  Estimated time: ~{len(scenarios) * 0.3:.0f} minutes "
+                          f"(at ~18s/scenario)\n")
+            cat_counts = {}
+            for s in scenarios:
+                label = CATEGORY_LABELS.get(s.category, s.category.value)
+                cat_counts[label] = cat_counts.get(label, 0) + 1
+            for label, count in sorted(cat_counts.items()):
+                console.print(f"  {label}: {count} scenarios")
+            console.print()
+            for s in scenarios:
+                console.print(f"  [dim]{s.id}[/]  {s.title}")
+            console.print()
+        sys.exit(0)
+
     # Cascade: CLI flag → env var → auto-discovery
     model = args.model or os.getenv("TOOL_EVAL_MODEL") or None
     backend = args.backend or os.getenv("TOOL_EVAL_BACKEND", "")
@@ -1310,7 +1365,7 @@ def main() -> None:
         else:
             if args.json:
                 _headless_error(
-                    "no_server",
+                    NO_SERVER,
                     "No inference server found on localhost. "
                     "Tried ports: " + ", ".join(str(p) for p, _, _ in _DISCOVERY_PORTS),
                     exit_code=2,

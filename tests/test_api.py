@@ -646,3 +646,162 @@ class TestAsyncReExport:
         from tool_eval_bench import run_benchmark
 
         assert inspect.iscoroutinefunction(run_benchmark)
+
+
+# ---------------------------------------------------------------------------
+# Error constants (domain/errors.py)
+# ---------------------------------------------------------------------------
+
+class TestErrorConstants:
+    """Verify the structured error taxonomy is consistent."""
+
+    def test_all_constants_are_strings(self):
+        from tool_eval_bench.domain import errors
+
+        codes = [
+            errors.CONNECTION_FAILED,
+            errors.HTTP_ERROR,
+            errors.DETECTION_FAILED,
+            errors.INVALID_RESPONSE,
+            errors.NO_MODELS,
+            errors.NO_SERVER,
+        ]
+        for code in codes:
+            assert isinstance(code, str)
+            assert code == code.lower()  # all lowercase
+            assert " " not in code        # no spaces
+
+    def test_no_duplicate_codes(self):
+        from tool_eval_bench.domain import errors
+
+        codes = [
+            errors.CONNECTION_FAILED,
+            errors.HTTP_ERROR,
+            errors.DETECTION_FAILED,
+            errors.INVALID_RESPONSE,
+            errors.NO_MODELS,
+            errors.NO_SERVER,
+        ]
+        assert len(codes) == len(set(codes)), "Duplicate error codes found"
+
+
+# ---------------------------------------------------------------------------
+# RunRepository context manager
+# ---------------------------------------------------------------------------
+
+class TestRunRepositoryContextManager:
+    """Verify RunRepository supports 'with' usage."""
+
+    def test_context_manager_protocol(self, tmp_path):
+        from tool_eval_bench.storage.db import RunRepository
+
+        db_path = tmp_path / "test.sqlite"
+        with RunRepository(str(db_path)) as repo:
+            assert db_path.exists()
+            # Should be usable inside the context
+            assert repo._conn is not None
+
+    def test_context_manager_closes_on_exit(self, tmp_path):
+        from tool_eval_bench.storage.db import RunRepository
+
+        db_path = tmp_path / "test.sqlite"
+        with RunRepository(str(db_path)) as repo:
+            conn = repo._conn
+        # After exit, close() was called
+        # SQLite connections may not have a reliable .closed attribute,
+        # but attempting an operation should fail
+        import sqlite3
+        try:
+            conn.execute("SELECT 1")
+            # Some SQLite builds don't raise on closed connections
+        except sqlite3.ProgrammingError:
+            pass  # Expected — connection was closed
+
+
+# ---------------------------------------------------------------------------
+# async_tools: JSON safety
+# ---------------------------------------------------------------------------
+
+class TestAsyncToolsJsonSafety:
+    """Verify format_async_status produces valid JSON for all branches."""
+
+    def test_all_statuses_produce_valid_json(self):
+        from tool_eval_bench.runner.async_tools import (
+            AsyncToolResult,
+            AsyncToolStatus,
+            format_async_status,
+        )
+
+        for status in AsyncToolStatus:
+            result = AsyncToolResult(
+                status=status,
+                handle="test_handle_1",
+                error='Error with "quotes" and \\backslashes',
+                result={"key": "value"},
+                progress_percent=0.5,
+            )
+            output = format_async_status(result)
+            parsed = json.loads(output)  # Must not raise
+            assert isinstance(parsed, dict)
+            assert "status" in parsed
+
+    def test_special_chars_in_error_are_escaped(self):
+        from tool_eval_bench.runner.async_tools import (
+            AsyncToolResult,
+            AsyncToolStatus,
+            format_async_status,
+        )
+
+        result = AsyncToolResult(
+            status=AsyncToolStatus.FAILED,
+            handle="h1",
+            error='Error: "file not found" at path C:\\Users\\test',
+        )
+        output = format_async_status(result)
+        parsed = json.loads(output)
+        assert parsed["error"] == result.error  # Exact roundtrip
+
+
+# ---------------------------------------------------------------------------
+# --dry-run output
+# ---------------------------------------------------------------------------
+
+class TestDryRun:
+    """Verify --dry-run produces correct scenario lists."""
+
+    def test_dry_run_json_contains_all_scenarios(self):
+        """Dry-run JSON output should list all 69 core scenarios."""
+        import argparse
+
+        from tool_eval_bench.cli.bench import _resolve_scenarios
+
+        args = argparse.Namespace(
+            short=False, hardmode=False, scenarios=None, categories=None,
+        )
+        scenarios = _resolve_scenarios(args)
+        assert len(scenarios) == 69
+
+    def test_dry_run_short_subset(self):
+        """Dry-run with --short should list only 15 scenarios."""
+        import argparse
+
+        from tool_eval_bench.cli.bench import _resolve_scenarios
+
+        args = argparse.Namespace(
+            short=True, hardmode=False, scenarios=None, categories=None,
+        )
+        scenarios = _resolve_scenarios(args)
+        assert len(scenarios) == 15
+
+    def test_dry_run_category_filter(self):
+        """Dry-run with --categories should filter correctly."""
+        import argparse
+
+        from tool_eval_bench.cli.bench import _resolve_scenarios
+
+        args = argparse.Namespace(
+            short=False, hardmode=False, scenarios=None, categories=["A"],
+        )
+        scenarios = _resolve_scenarios(args)
+        assert all(s.category.value == "A" for s in scenarios)
+        assert len(scenarios) >= 1

@@ -1,8 +1,8 @@
-"""Experimental async tool orchestration (WIP).
+"""Experimental async tool orchestration.
 
 This module provides an alternative orchestration model where tool calls can
 execute asynchronously and the model receives incremental results. This is
-a non-breaking WIP — the existing synchronous orchestrator is unchanged.
+non-breaking — the existing synchronous orchestrator is unchanged.
 
 Activated via ``--experimental-async`` CLI flag (not yet wired).
 
@@ -19,7 +19,7 @@ Status: EXPERIMENTAL — API may change. Do not depend on this in production.
 
 from __future__ import annotations
 
-
+import json
 import logging
 import time
 from dataclasses import dataclass, field
@@ -200,31 +200,31 @@ def format_async_status(result: AsyncToolResult) -> str:
     during async orchestration.
     """
     if result.status == AsyncToolStatus.PENDING:
-        return (
-            f'{{"status": "pending", "handle": "{result.handle}", '
-            f'"message": "Task started. Poll with handle to check progress."}}'
-        )
+        return json.dumps({
+            "status": "pending",
+            "handle": result.handle,
+            "message": "Task started. Poll with handle to check progress.",
+        })
     if result.status == AsyncToolStatus.RUNNING:
-        parts = {
+        parts: dict[str, Any] = {
             "status": "running",
             "handle": result.handle,
             "progress": f"{(result.progress_percent or 0) * 100:.0f}%",
         }
         if result.intermediate_data is not None:
             parts["intermediate_data"] = result.intermediate_data
-        import json
         return json.dumps(parts)
     if result.status == AsyncToolStatus.COMPLETED:
-        import json
         return json.dumps({"status": "completed", "result": result.result})
     if result.status == AsyncToolStatus.FAILED:
-        return (
-            f'{{"status": "failed", "handle": "{result.handle}", '
-            f'"error": "{result.error}"}}'
-        )
+        return json.dumps({
+            "status": "failed",
+            "handle": result.handle,
+            "error": result.error,
+        })
     if result.status == AsyncToolStatus.CANCELLED:
-        return f'{{"status": "cancelled", "handle": "{result.handle}"}}'
-    return '{"status": "unknown"}'
+        return json.dumps({"status": "cancelled", "handle": result.handle})
+    return json.dumps({"status": "unknown"})
 
 
 # ---------------------------------------------------------------------------

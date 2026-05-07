@@ -504,6 +504,9 @@ The orchestrator then:
 ## Architecture
 
 ```text
+SKILL.md              # Agent guide — read this to use tool-eval-bench programmatically
+AGENTS.md             # Contributor conventions (architecture, quality bar, git rules)
+
 src/tool_eval_bench/
   api.py              # Public programmatic API (run_benchmark, format_result)
   schema.py           # Machine-readable args schema for external validators

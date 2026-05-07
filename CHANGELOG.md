@@ -2,7 +2,7 @@
 
 All notable changes to `tool-eval-bench` are documented here.
 
-## [Unreleased]
+## [1.6.0] — 2026-05-07
 
 ### Added
 
@@ -23,14 +23,11 @@ All notable changes to `tool-eval-bench` are documented here.
   Also re-exported from `tool_eval_bench.api.ARGS_SCHEMA`.
 - **Convenience re-export** — `from tool_eval_bench import run_benchmark` works
   as a shorthand for the `api.run_benchmark()` function.
-- **21 new tests** (`tests/test_api.py`) covering versioned envelope, Spark Arena
-  field promotion, args schema validation, programmatic API invocation, JSONL
-  progress callbacks, and `--json-file` output.
 - **Server auto-discovery** — when `--base-url` is omitted (and no env var is set),
-  the CLI probes localhost on common inference server ports (8000/vLLM, 8080/llama.cpp,
-  30000/SGLang, 4000/LiteLLM, 11434/Ollama, 5000/TGI) and auto-selects the first
-  responding server.  Backend label is also inferred from the discovered port.
-  In `--json` mode, emits a `server_discovered` JSONL event on stderr.
+  the CLI probes localhost on common inference server ports (8000, 8080, 8081, 8082,
+  30000, 4000, 3000, 11434, 5000) and auto-selects the first responding server.
+  Backend is identified via HTTP response header sniffing, with port-based
+  fallback hints.  In `--json` mode, emits a `server_discovered` JSONL event.
 - **`--probe` readiness check** — verify that a server is reachable and exit.
   Exits 0 if the server responds to `/v1/models`, exit 1 otherwise.  Emits
   a `probe_result` JSONL event in `--json` mode.  Useful for CI/CD pipelines
@@ -43,7 +40,37 @@ All notable changes to `tool-eval-bench` are documented here.
   instead of Rich-formatted console markup.
 - **Differentiated exit codes** — exit 2 for connection/HTTP errors,
   exit 3 for no-models-found (previously all exit 1).
-  Total test count: **1,380**.
+- **`SKILL.md`** — comprehensive agent guide covering zero-config usage,
+  JSON output schema, JSONL progress events, exit codes, programmatic API,
+  result interpretation, and common pitfalls.
+- **`py.typed` marker** — package is now recognized as typed by mypy/pyright.
+- **`--dry-run` flag** — lists which scenarios would run, with category breakdown
+  and estimated time, then exits (no server connection needed).  In `--json` mode,
+  outputs a machine-readable JSON document.
+- **Structured error taxonomy** (`tool_eval_bench.domain.errors`) — canonical
+  error code constants (`CONNECTION_FAILED`, `HTTP_ERROR`, `DETECTION_FAILED`,
+  `INVALID_RESPONSE`, `NO_MODELS`, `NO_SERVER`) used by all headless JSONL error
+  events.  Integrators can exhaustively match on these values.
+- **`RunRepository` context manager** — supports `with RunRepository() as repo:`
+  for automatic cleanup of SQLite connections.
+- **17 new tests** — persistence bypass, backend detection, async re-export,
+  error constants, context manager, async_tools JSON safety, dry-run scenarios.
+  Total test count: **1,397**.
+
+### Fixed
+
+- **`BenchmarkService` persistence bypass** — `repo or RunRepository()` silently
+  replaced `None` with a default, defeating `persist=False`.  Now uses a sentinel
+  pattern to distinguish "not provided" from "explicitly None".
+- **Probe URL 404 fallback was a no-op** — when `base_url` ended with `/v1`, the
+  fallback retried the same URL.  Now uses shared `utils/urls.py` for consistent
+  URL construction.
+- **`benchmark_complete` JSONL event emitted `null` for `final_score`** — was
+  reading from the wrong nested path (`scores.final_score`) instead of the
+  promoted top-level field.
+- **`__init__.py` re-export was sync returning a coroutine** — callers expecting
+  `asyncio.run(run_benchmark(...))` got a doubly-wrapped coroutine.  Now properly
+  `async`.
 
 ### Changed
 
@@ -57,6 +84,20 @@ All notable changes to `tool-eval-bench` are documented here.
 - **`.env` isolation verified** — `load_dotenv(override=False)` ensures that
   environment variables set by the calling process (e.g., an agent) are never
   overridden by a `.env` file.  CLI flags take priority over env vars.
+- **Backend detection uses response headers** — `_detect_backend_from_response()`
+  inspects the `Server` HTTP header to identify vLLM, SGLang, and llama.cpp,
+  falling back to port-based hints only when headers are inconclusive.
+- **Filler text replaced** — the Gatsby excerpt in `throughput.py` was replaced
+  with original LLM-inference themed text (no copyright concern).
+- **Large-toolset detection uses category check** — replaced fragile scenario-ID
+  string parsing with semantic `Category.L` membership check.
+- **Global `_mtp_warned` eliminated** — moved into `TokenizerConfig` as a
+  per-run instance attribute for thread/library safety.
+- **Silent exception handlers annotated** — 6 bare `except Exception:` blocks
+  across core modules now include `logger.debug` calls for debuggability.
+- **`async_tools.py` uses `json.dumps` consistently** — replaced fragile f-string
+  JSON construction with `json.dumps()` in all branches of `format_async_status()`.
+  A quote character in an error message previously produced invalid JSON.
 
 ## [1.5.1] — 2026-05-04
 

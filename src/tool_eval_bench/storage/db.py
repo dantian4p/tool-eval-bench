@@ -40,6 +40,12 @@ class RunRepository:
         if self._conn:
             self._conn.close()
 
+    def __enter__(self) -> "RunRepository":
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self.close()
+
     def __del__(self) -> None:  # safety net
         try:
             self.close()
