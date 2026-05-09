@@ -23,6 +23,7 @@ from tool_eval_bench.runner.orchestrator import run_all_scenarios
 from tool_eval_bench.storage.db import RunRepository
 from tool_eval_bench.storage.reports import MarkdownReporter
 from tool_eval_bench.utils.ids import build_run_id
+from tool_eval_bench.utils.urls import redact_url as _redact_url
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +153,7 @@ class BenchmarkService:
             "config": {
                 "model": model,
                 "backend": backend,
-                "base_url": base_url,
+                "base_url": _redact_url(base_url),
                 "temperature": temperature,
                 "timeout_seconds": timeout_seconds,
                 "max_turns": max_turns,

@@ -181,7 +181,11 @@ class TestBuildCommand:
         # coherence check is enabled by default (skip-coherence NOT in cmd)
         assert "--skip-coherence" not in cmd
 
-    def test_adds_api_key(self, monkeypatch):
+    def test_api_key_not_on_command_line(self, monkeypatch):
+        """API key must NOT appear on the command line (security: visible in ps aux).
+
+        The key is passed via OPENAI_API_KEY env var in run_llama_benchy() instead.
+        """
         monkeypatch.setattr(
             "tool_eval_bench.runner.llama_benchy.shutil.which",
             lambda name: "/usr/bin/llama-benchy" if name == "llama-benchy" else None,
@@ -189,10 +193,10 @@ class TestBuildCommand:
         cmd = _build_command(
             "http://localhost:8888/v1",
             "test-model",
-            api_key="sk-test",
         )
-        assert "--api-key" in cmd
-        assert "sk-test" in cmd
+        assert "--api-key" not in cmd
+        # Ensure no argument looks like a secret
+        assert not any(arg.startswith("sk-") for arg in cmd)
 
     def test_multiple_pp_tg_depths(self, monkeypatch):
         monkeypatch.setattr(
