@@ -169,8 +169,28 @@ Each evaluator has unit tests covering at minimum:
 - 1 FAIL case (wrong tool or missing answer)
 - Key PARTIAL cases where applicable
 
-See `tests/test_scenarios.py`, `tests/test_evaluators_extended.py`, and
-`tests/test_hardmode.py` (44 tests covering all 5 Category P scenarios).
+#### Test layers
+
+| File | Purpose |
+|---|---|
+| `tests/test_scenarios.py` | Registry integrity, scoring, safety gating, trial aggregation |
+| `tests/test_evaluator_contract.py` | **Golden-trace contract tests** — PASS/FAIL/PARTIAL fixtures for all 15 base scenarios (TC-01–TC-15), including paraphrased refusals, wrong-order dependency chains, and common malformed argument patterns |
+| `tests/test_evaluators_extended.py` | Extended/agentic/adversarial scenario evaluators (F–O) |
+| `tests/test_hardmode.py` | Hard Mode scenarios (Category P, TC-70–TC-74) |
+| `tests/test_evaluator_robustness.py` | Crash-resistance: empty state, 50-call floods, unicode, very long answers |
+
+The contract test layer (`test_evaluator_contract.py`) is the primary guard against
+evaluator regression. It documents the exact phrases, argument patterns, and ordering
+constraints that each evaluator accepts or rejects — including known strictnesses such
+as TC-12 requiring the word "delete" or "available tool" in a refusal response.
+
+#### CLI/schema contract
+
+`tests/test_api.py::TestArgsSchema::test_all_parser_args_in_schema_or_hidden` enforces
+that every public CLI argument is documented in `schema.py`. Adding a new flag to
+`cli/bench.py` without updating `schema.py` causes this test to fail immediately,
+preventing silent API drift.
+
 
 ### Evaluator Reliability Improvements
 

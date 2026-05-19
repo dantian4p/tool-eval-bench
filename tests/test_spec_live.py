@@ -394,7 +394,7 @@ class TestDashboardHelpers:
     """Test display helper functions from spec_live_display."""
 
     def test_ar_color_gradient(self):
-        from tool_eval_bench.cli.spec_live_display import _ar_color
+        from tool_eval_bench.cli.spec_live_rendering import _ar_color
 
         assert _ar_color(0.0) == "bright_red"
         assert _ar_color(0.1) == "bright_red"
@@ -405,7 +405,7 @@ class TestDashboardHelpers:
         assert _ar_color(0.85) == "bright_green"
 
     def test_gauge_bar_length(self):
-        from tool_eval_bench.cli.spec_live_display import _gauge_bar
+        from tool_eval_bench.cli.spec_live_rendering import _gauge_bar
 
         bar = _gauge_bar(0.5, width=20)
         text_str = str(bar)
@@ -413,7 +413,7 @@ class TestDashboardHelpers:
         assert "50.0%" in text_str
 
     def test_gauge_bar_clamped(self):
-        from tool_eval_bench.cli.spec_live_display import _gauge_bar
+        from tool_eval_bench.cli.spec_live_rendering import _gauge_bar
 
         # Values outside 0-1 should be clamped
         bar_high = _gauge_bar(1.5, width=10)
@@ -422,39 +422,39 @@ class TestDashboardHelpers:
         assert str(bar_low)  # should not crash
 
     def test_sparkline_empty(self):
-        from tool_eval_bench.cli.spec_live_display import _sparkline
+        from tool_eval_bench.cli.spec_live_rendering import _sparkline
 
         spark = _sparkline([], width=10)
         assert len(str(spark)) == 10  # all dashes
 
     def test_sparkline_single_value(self):
-        from tool_eval_bench.cli.spec_live_display import _sparkline
+        from tool_eval_bench.cli.spec_live_rendering import _sparkline
 
         spark = _sparkline([5.0], width=10)
         assert str(spark)  # should not crash
 
     def test_sparkline_constant_values(self):
-        from tool_eval_bench.cli.spec_live_display import _sparkline
+        from tool_eval_bench.cli.spec_live_rendering import _sparkline
 
         spark = _sparkline([5.0, 5.0, 5.0], width=10)
         assert str(spark)  # should not crash, all same → range=0
 
     def test_sparkline_varying(self):
-        from tool_eval_bench.cli.spec_live_display import _sparkline
+        from tool_eval_bench.cli.spec_live_rendering import _sparkline
 
         spark = _sparkline([1.0, 5.0, 3.0, 7.0, 2.0], width=10)
         text = str(spark)
         assert len(text) == 10  # padded to width
 
     def test_format_uptime(self):
-        from tool_eval_bench.cli.spec_live_display import _format_uptime
+        from tool_eval_bench.cli.spec_live_rendering import _format_uptime
 
         assert _format_uptime(0) == "00:00"
         assert _format_uptime(65) == "01:05"
         assert _format_uptime(3661) == "1:01:01"
 
     def test_position_bars_empty(self):
-        from tool_eval_bench.cli.spec_live_display import _position_bars
+        from tool_eval_bench.cli.spec_live_rendering import _position_bars
 
         table = _position_bars({})
         # Should render without error — empty table (panel hidden when no data)
@@ -468,7 +468,7 @@ class TestDashboardHelpers:
         assert text == ""
 
     def test_position_bars_with_data(self):
-        from tool_eval_bench.cli.spec_live_display import _position_bars
+        from tool_eval_bench.cli.spec_live_rendering import _position_bars
         from rich.console import Console
         from io import StringIO
 
@@ -613,7 +613,7 @@ class TestBuildDashboard:
 
     def test_efficiency_insight_tuning_hint(self):
         """Low utilization triggers num_speculative_tokens suggestion."""
-        from tool_eval_bench.cli.spec_live_display import _efficiency_insight
+        from tool_eval_bench.cli.spec_live_rendering import _efficiency_insight
 
         delta = self._make_delta(
             cumulative_acceptance_rate=0.15,
@@ -625,7 +625,7 @@ class TestBuildDashboard:
 
     def test_efficiency_insight_no_hint_when_good(self):
         """Good utilization does not trigger tuning hint."""
-        from tool_eval_bench.cli.spec_live_display import _efficiency_insight
+        from tool_eval_bench.cli.spec_live_rendering import _efficiency_insight
 
         delta = self._make_delta(
             cumulative_acceptance_rate=0.75,
@@ -637,7 +637,7 @@ class TestBuildDashboard:
 
     def test_efficiency_insight_awaiting(self):
         """No cumulative rate → awaiting message."""
-        from tool_eval_bench.cli.spec_live_display import _efficiency_insight
+        from tool_eval_bench.cli.spec_live_rendering import _efficiency_insight
 
         delta = self._make_delta(cumulative_acceptance_rate=None)
         text = str(_efficiency_insight(delta))
@@ -1036,15 +1036,15 @@ class TestPerPositionDecaySummary:
     """Test _per_position_decay_summary analysis."""
 
     def test_no_rates_returns_none(self):
-        from tool_eval_bench.cli.spec_live_display import _per_position_decay_summary
+        from tool_eval_bench.cli.spec_live_rendering import _per_position_decay_summary
         assert _per_position_decay_summary({}) is None
 
     def test_single_position_returns_none(self):
-        from tool_eval_bench.cli.spec_live_display import _per_position_decay_summary
+        from tool_eval_bench.cli.spec_live_rendering import _per_position_decay_summary
         assert _per_position_decay_summary({0: 0.8}) is None
 
     def test_effective_positions_count(self):
-        from tool_eval_bench.cli.spec_live_display import _per_position_decay_summary
+        from tool_eval_bench.cli.spec_live_rendering import _per_position_decay_summary
         rates = {0: 0.80, 1: 0.60, 2: 0.40, 3: 0.15, 4: 0.05}
         result = _per_position_decay_summary(rates)
         text = str(result)
@@ -1053,7 +1053,7 @@ class TestPerPositionDecaySummary:
         assert "effective" in text
 
     def test_half_point_reported(self):
-        from tool_eval_bench.cli.spec_live_display import _per_position_decay_summary
+        from tool_eval_bench.cli.spec_live_rendering import _per_position_decay_summary
         rates = {0: 0.80, 1: 0.60, 2: 0.35, 3: 0.15}
         result = _per_position_decay_summary(rates)
         text = str(result)
@@ -1061,7 +1061,7 @@ class TestPerPositionDecaySummary:
         assert "p2" in text
 
     def test_no_half_point_when_all_high(self):
-        from tool_eval_bench.cli.spec_live_display import _per_position_decay_summary
+        from tool_eval_bench.cli.spec_live_rendering import _per_position_decay_summary
         rates = {0: 0.90, 1: 0.85, 2: 0.80}
         result = _per_position_decay_summary(rates)
         text = str(result)
@@ -1070,7 +1070,7 @@ class TestPerPositionDecaySummary:
         assert "50% drop" not in text
 
     def test_decay_rate_gamma(self):
-        from tool_eval_bench.cli.spec_live_display import _per_position_decay_summary
+        from tool_eval_bench.cli.spec_live_rendering import _per_position_decay_summary
         rates = {0: 0.80, 1: 0.60, 2: 0.40, 3: 0.25}
         result = _per_position_decay_summary(rates)
         text = str(result)
@@ -1087,40 +1087,40 @@ class TestSpecMethodLabel:
     """Test _spec_method_label formatting."""
 
     def test_dflash_label(self):
-        from tool_eval_bench.cli.spec_live_display import _spec_method_label
+        from tool_eval_bench.cli.spec_live_rendering import _spec_method_label
         label, style = _spec_method_label("dflash")
         assert label == "Draft Flash"
         assert "cyan" in style
 
     def test_mtp_label(self):
-        from tool_eval_bench.cli.spec_live_display import _spec_method_label
+        from tool_eval_bench.cli.spec_live_rendering import _spec_method_label
         label, style = _spec_method_label("mtp")
         assert label == "Multi-Token Prediction"
         assert "yellow" in style
 
     def test_eagle_label(self):
-        from tool_eval_bench.cli.spec_live_display import _spec_method_label
+        from tool_eval_bench.cli.spec_live_rendering import _spec_method_label
         label, _ = _spec_method_label("eagle")
         assert label == "EAGLE"
 
     def test_eagle3_label(self):
-        from tool_eval_bench.cli.spec_live_display import _spec_method_label
+        from tool_eval_bench.cli.spec_live_rendering import _spec_method_label
         label, _ = _spec_method_label("eagle3")
         assert label == "EAGLE-3"
 
     def test_ngram_label(self):
-        from tool_eval_bench.cli.spec_live_display import _spec_method_label
+        from tool_eval_bench.cli.spec_live_rendering import _spec_method_label
         label, _ = _spec_method_label("ngram")
         assert label == "N-Gram"
 
     def test_unknown_label(self):
-        from tool_eval_bench.cli.spec_live_display import _spec_method_label
+        from tool_eval_bench.cli.spec_live_rendering import _spec_method_label
         label, style = _spec_method_label("unknown")
         assert label == "Speculative Decoding"
         assert style == "bold dim"
 
     def test_mlp_speculator_label(self):
-        from tool_eval_bench.cli.spec_live_display import _spec_method_label
+        from tool_eval_bench.cli.spec_live_rendering import _spec_method_label
         label, _ = _spec_method_label("mlp_speculator")
         assert label == "MLP Speculator"
 
@@ -1171,7 +1171,7 @@ class TestHorizontalBarsScaling:
     """Test horizontal per-position bars scale to many positions."""
 
     def test_six_positions_single_row(self):
-        from tool_eval_bench.cli.spec_live_display import _position_bars_horizontal
+        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
         from rich.console import Console
         from io import StringIO
 
@@ -1184,7 +1184,7 @@ class TestHorizontalBarsScaling:
         assert "p5" in text
 
     def test_twelve_positions_multi_row(self):
-        from tool_eval_bench.cli.spec_live_display import _position_bars_horizontal
+        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
         from rich.console import Console
         from io import StringIO
 
@@ -1201,7 +1201,7 @@ class TestHorizontalBarsScaling:
         assert len(lines) >= 2
 
     def test_narrow_terminal_still_works(self):
-        from tool_eval_bench.cli.spec_live_display import _position_bars_horizontal
+        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
         from rich.console import Console
         from io import StringIO
 
@@ -1307,7 +1307,7 @@ class TestDashboardSpecBadge:
 
     def test_dflash_efficiency_insight_with_nst(self):
         """Dflash with high draft tokens and low utilization shows hint."""
-        from tool_eval_bench.cli.spec_live_display import _efficiency_insight
+        from tool_eval_bench.cli.spec_live_rendering import _efficiency_insight
         delta = self._make_delta(
             spec_method="dflash",
             cumulative_acceptance_rate=0.20,
@@ -1321,7 +1321,7 @@ class TestDashboardSpecBadge:
 
     def test_mtp_efficiency_insight_guidance(self):
         """MTP with good utilization shows MTP-specific guidance."""
-        from tool_eval_bench.cli.spec_live_display import _efficiency_insight
+        from tool_eval_bench.cli.spec_live_rendering import _efficiency_insight
         delta = self._make_delta(
             spec_method="mtp",
             cumulative_acceptance_rate=0.65,
@@ -1562,7 +1562,7 @@ class TestHighKPositionScaling:
 
     def test_twenty_positions(self):
         """20 positions should render without errors."""
-        from tool_eval_bench.cli.spec_live_display import _position_bars_horizontal
+        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
         from rich.console import Console
         from io import StringIO
 
@@ -1576,7 +1576,7 @@ class TestHighKPositionScaling:
 
     def test_thirty_two_positions(self):
         """32 positions (extreme k) should wrap to multiple rows."""
-        from tool_eval_bench.cli.spec_live_display import _position_bars_horizontal
+        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
         from rich.console import Console
         from io import StringIO
 

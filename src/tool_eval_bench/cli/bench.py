@@ -80,7 +80,7 @@ def _resolve_scenarios(args: argparse.Namespace) -> list[ScenarioDefinition]:
 
 
 # ---------------------------------------------------------------------------
-# Load .env (same logic as tui/settings.py, inlined to avoid import coupling)
+# Load .env
 # ---------------------------------------------------------------------------
 
 def _load_dotenv() -> None:
@@ -1071,8 +1071,13 @@ def _parse_int_list(value: str) -> list[int]:
     return [int(x) for x in value.replace(",", " ").split() if x.strip()]
 
 
-def main() -> None:
-    _load_dotenv()
+def _make_parser() -> argparse.ArgumentParser:
+    """Build and return the CLI argument parser.
+
+    Extracted from ``main()`` so that tests and external tools can introspect
+    the full argument list without calling ``parse_args()`` (which would consume
+    sys.argv).
+    """
     parser = argparse.ArgumentParser(
         description="Run tool-eval-bench agentic tool-call benchmark",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1248,12 +1253,17 @@ def main() -> None:
     parser.add_argument("--experimental-async", action="store_true",
                         help=argparse.SUPPRESS)
 
-    # -- Interactive TUI ---------------------------------------------------
-    parser.add_argument(
-        "-i", "--interactive", action="store_true",
-        help="Launch interactive TUI mode (requires: pip install tool-eval-bench[tui])",
-    )
+    return parser
 
+
+# Set of argument dest names that are intentionally suppressed (not in ARGS_SCHEMA).
+# Used by the drift-detection test in tests/test_api.py.
+_HIDDEN_ARGS: frozenset[str] = frozenset({"llm_judge", "judge_model", "experimental_async", "help"})
+
+
+def main() -> None:
+    _load_dotenv()
+    parser = _make_parser()
     args = parser.parse_args()
 
     # --json-file implies --json
@@ -1261,19 +1271,6 @@ def main() -> None:
         args.json = True
 
     console = Console()
-
-    # --interactive: launch Textual TUI and exit
-    if args.interactive:
-        try:
-            from tool_eval_bench.tui.app import run_tui
-        except ImportError:
-            console.print(
-                "[bold red]Error:[/] Interactive mode requires the [tui] extra.\n"
-                "Install it with: [bold cyan]pip install tool-eval-bench\\[tui][/]"
-            )
-            sys.exit(1)
-        run_tui()
-        return
 
     # --history: show recent runs and exit
     if args.history:
@@ -1456,12 +1453,12 @@ def main() -> None:
 
     # -- spec-live: standalone live monitor (exits after session) --
     if args.spec_live:
-        from tool_eval_bench.cli.spec_live_display import run_spec_live
-
         # Map CLI choice names to internal method identifiers
         _method_map = {"draft": "draft_model"}
         raw_method = args.spec_method
         spec_method_hint = _method_map.get(raw_method, raw_method) if raw_method != "auto" else None
+
+        from tool_eval_bench.cli.spec_live_display import run_spec_live
 
         try:
             asyncio.run(run_spec_live(

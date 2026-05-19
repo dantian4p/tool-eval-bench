@@ -4,6 +4,37 @@ All notable changes to `tool-eval-bench` are documented here.
 
 ## [Unreleased]
 
+## [1.8.0] — 2026-05-19
+
+### Removed
+
+- **Interactive TUI (`-i/--interactive`)** — the Textual-based TUI (`tui/` package,
+  `textual` optional dependency, `pip install tool-eval-bench[tui]`) has been removed.
+  The project's stated interface is the CLI; shipping a second UI surface increases
+  maintenance without benefit to the benchmark mission (AGENTS.md: "no TUI").
+  The Rich-based live monitors (`--spec-live`, `--no-live`) are unaffected — they run
+  inline in the terminal and have no external dependency.
+
+### Changed
+
+- **`ARGS_SCHEMA` now covers all public CLI args** — `schema.py` previously documented
+  ~25 of the ~40+ public flags.  The schema now matches the parser exactly: every
+  public argument is present, and a new drift-detection test
+  (`TestArgsSchema::test_all_parser_args_in_schema_or_hidden`) will fail if they
+  diverge in the future.
+- **`_make_parser()` extracted from `main()`** — the argparse parser is now built by a
+  standalone function, making it inspectable by tests and external tools without
+  consuming `sys.argv`.
+
+### Added
+
+- **Golden-trace evaluator contract tests** (`tests/test_evaluator_contract.py`) —
+  PASS/FAIL/PARTIAL golden traces for all 15 base scenarios (TC-01 to TC-15),
+  including paraphrased refusals, malformed-but-common JSON arguments, wrong-order
+  tool calls, and injection-leakage detection.  Protects scoring semantics from
+  accidental changes to evaluator logic.
+
+
 ## [1.7.0] — 2026-05-11
 
 ### Added

@@ -210,7 +210,7 @@ tool-eval-bench --model gemma4 --backend vllm --base-url http://localhost:8080
 --leaderboard          Show ranked model leaderboard
 --export FORMAT        Export all results as csv or json
 --export-output FILE   Output file for --export (default: stdout)
--i, --interactive      Launch interactive TUI (requires: pip install tool-eval-bench[tui])
+
 --spec-live            Start live speculative decoding monitor (Ctrl+R to reset, Ctrl+C to stop)
 --spec-live-interval S Poll interval for --spec-live in seconds (default: 1.0)
 ```

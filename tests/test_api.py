@@ -126,6 +126,47 @@ class TestArgsSchema:
         assert "args" in schema
         assert schema["args"] is ARGS_SCHEMA
 
+    def test_schema_size(self):
+        """Schema should cover all public args — update this when adding flags."""
+        assert len(ARGS_SCHEMA) >= 40, (
+            f"ARGS_SCHEMA has only {len(ARGS_SCHEMA)} entries — did you forget to "
+            "add a new flag to schema.py?"
+        )
+
+    def test_all_parser_args_in_schema_or_hidden(self):
+        """Every public parser argument must appear in ARGS_SCHEMA.
+
+        This is the canonical drift-detection test.  It builds the real
+        argparse parser (via ``_make_parser()``) and checks that every
+        non-suppressed dest is either:
+          - listed in ARGS_SCHEMA, OR
+          - listed in _HIDDEN_ARGS (intentionally suppressed).
+
+        Fail here means a CLI flag was added to bench.py without a
+        corresponding entry in schema.py.
+        """
+        from tool_eval_bench.cli.bench import _HIDDEN_ARGS, _make_parser
+
+        parser = _make_parser()
+        schema_names = {entry["name"] for entry in ARGS_SCHEMA}
+
+        missing: list[str] = []
+        for action in parser._actions:
+            dest = action.dest
+            # argparse.SUPPRESS actions have dest == SUPPRESS; skip
+            if dest == "==SUPPRESS==":
+                continue
+            if dest in _HIDDEN_ARGS:
+                continue
+            if dest not in schema_names:
+                missing.append(dest)
+
+        assert not missing, (
+            "The following CLI args are public (not in _HIDDEN_ARGS) but missing "
+            "from ARGS_SCHEMA in schema.py — add them:\n  "
+            + "\n  ".join(sorted(missing))
+        )
+
 
 # ---------------------------------------------------------------------------
 # run_benchmark tests (mocked service)
