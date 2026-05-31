@@ -16,3 +16,4 @@ runs/
 .coverage
 htmlcov/
 .opencode/
+.worktrees/
