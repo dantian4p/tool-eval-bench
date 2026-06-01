@@ -48,6 +48,14 @@ Before claiming completion:
 1. `ruff check .`
 2. `.venv/bin/python -m pytest tests/ --ignore=tests/test_llama_benchy.py`
 
+**Pre-commit hooks** enforce both checks automatically:
+
+```bash
+pip install -e '.[dev]'       # includes pre-commit
+pre-commit install            # ruff lint on every commit
+pre-commit install --hook-type pre-push  # pytest on every push
+```
+
 **Always use the project venv** (`.venv/bin/python`), not system Python.
 Dev dependencies like `pytest-asyncio` are installed in the venv via `pip install -e '.[dev]'`.
 The `[hf]` optional group (`pip install -e '.[hf]'`) installs the `datasets` library

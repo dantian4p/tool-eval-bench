@@ -1,0 +1,21 @@
+# Pre-commit hooks — run `pre-commit install` to activate.
+# See https://pre-commit.com for more information.
+
+repos:
+  # ── Ruff: lint + auto-fix ───────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.15
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+
+  # ── Pytest: fast smoke test (pre-push only) ─────────────────
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: pytest (quick)
+        entry: .venv/bin/python -m pytest tests/ --ignore=tests/test_llama_benchy.py -x -q --tb=line --no-header
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
