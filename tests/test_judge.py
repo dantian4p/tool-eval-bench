@@ -47,20 +47,7 @@ def _make_scenario(
     )
 
 
-def _make_state(
-    tool_calls: list[ToolCallRecord] | None = None,
-    final_answer: str = "",
-    assistant_messages: list[str] | None = None,
-    tool_results: list | None = None,
-    meta: dict | None = None,
-) -> ScenarioState:
-    return ScenarioState(
-        tool_calls=tool_calls or [],
-        tool_results=tool_results or [],
-        assistant_messages=assistant_messages or [],
-        final_answer=final_answer,
-        meta=meta or {},
-    )
+from conftest import make_state as _make_state
 
 
 def _make_result(

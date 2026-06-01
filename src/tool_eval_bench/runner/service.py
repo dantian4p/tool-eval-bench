@@ -101,7 +101,7 @@ class BenchmarkService:
                 raise ValueError(
                     f"Invalid --reference-date '{reference_date}'. "
                     f"Expected format: YYYY-MM-DD (e.g. 2026-03-20)"
-                )
+                ) from None
 
         # Resolve scenarios: explicit list > ID filter > base default
         if scenarios is not None:

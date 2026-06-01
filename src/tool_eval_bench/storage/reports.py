@@ -91,12 +91,14 @@ class MarkdownReporter:
         )
         if has_large_toolset:
             import json as _json
+
             from tool_eval_bench.domain.tools_large import LARGE_TOOLSET
             tool_json_chars = len(_json.dumps(LARGE_TOOLSET))
             est_tokens = tool_json_chars // 4  # ~4 chars per token heuristic
             md.append(f"- **Tool Definition Overhead**: ~{est_tokens:,} tokens ({len(LARGE_TOOLSET)} tools, {tool_json_chars:,} chars)")
         else:
             import json as _json
+
             from tool_eval_bench.domain.tools import UNIVERSAL_TOOLS
             tool_json_chars = len(_json.dumps(UNIVERSAL_TOOLS))
             est_tokens = tool_json_chars // 4

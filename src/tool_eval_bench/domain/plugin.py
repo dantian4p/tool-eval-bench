@@ -15,7 +15,6 @@ from typing import Any
 
 from tool_eval_bench.adapters.base import BackendAdapter
 
-
 # ---------------------------------------------------------------------------
 # Universal result container
 # ---------------------------------------------------------------------------

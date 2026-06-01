@@ -336,7 +336,8 @@ async def run_llama_benchy(
             "Models won't be available",
             "unauthenticated requests to the HF Hub",
         )
-        assert proc.stdout is not None
+        if proc.stdout is None:
+            raise RuntimeError("Subprocess stdout unexpectedly None")
         async for raw_line in proc.stdout:
             line = raw_line.decode("utf-8", errors="replace").rstrip()
             output_lines.append(line)
@@ -367,7 +368,7 @@ async def run_llama_benchy(
         try:
             Path(output_file).unlink(missing_ok=True)
         except Exception:
-            pass
+            logger.debug("Failed to clean up temp file %s", output_file)
 
 
 # ---------------------------------------------------------------------------

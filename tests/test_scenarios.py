@@ -14,27 +14,7 @@ from tool_eval_bench.domain.scenarios import (
 from tool_eval_bench.evals.scenarios import SCENARIOS
 from tool_eval_bench.runner.orchestrator import score_results
 
-
-def _make_state(
-    tool_calls: list[dict] | None = None,
-    final_answer: str = "",
-    assistant_messages: list[str] | None = None,
-) -> ScenarioState:
-    state = ScenarioState()
-    state.final_answer = final_answer
-    state.assistant_messages = assistant_messages or ([final_answer] if final_answer else [])
-    if tool_calls:
-        for tc in tool_calls:
-            state.tool_calls.append(
-                ToolCallRecord(
-                    id=tc.get("id", f"call_{len(state.tool_calls)}"),
-                    name=tc["name"],
-                    raw_arguments="{}",
-                    arguments=tc.get("arguments", {}),
-                    turn=tc.get("turn", 1),
-                )
-            )
-    return state
+from conftest import make_state as _make_state
 
 
 class TestScenarioRegistry:

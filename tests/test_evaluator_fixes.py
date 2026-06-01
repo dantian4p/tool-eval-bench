@@ -15,41 +15,12 @@ from tool_eval_bench.evals.scenarios import SCENARIOS
 from tool_eval_bench.evals.scenarios_extended import EXTENDED_SCENARIOS
 from tool_eval_bench.evals.scenarios_agentic import AGENTIC_SCENARIOS
 
+from conftest import make_state as _make_state
+
 
 def _find(scenarios, scenario_id):
     """Find a scenario by ID."""
     return next(s for s in scenarios if s.id == scenario_id)
-
-
-def _make_state(
-    tool_calls: list[dict] | None = None,
-    tool_results: list[dict] | None = None,
-    final_answer: str = "",
-) -> ScenarioState:
-    state = ScenarioState()
-    state.final_answer = final_answer
-    state.assistant_messages = [final_answer] if final_answer else []
-    if tool_calls:
-        for tc in tool_calls:
-            state.tool_calls.append(
-                ToolCallRecord(
-                    id=tc.get("id", f"call_{len(state.tool_calls)}"),
-                    name=tc["name"],
-                    raw_arguments="{}",
-                    arguments=tc.get("arguments", {}),
-                    turn=tc.get("turn", 1),
-                )
-            )
-    if tool_results:
-        for tr in tool_results:
-            state.tool_results.append(
-                ToolResultRecord(
-                    call_id=tr.get("call_id", f"call_{len(state.tool_results)}"),
-                    name=tr["name"],
-                    result=tr["result"],
-                )
-            )
-    return state
 
 
 # ============================================================

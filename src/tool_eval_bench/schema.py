@@ -27,7 +27,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 # Argument schema version — bump when adding/removing/renaming args.
 SCHEMA_VERSION = "2"
 

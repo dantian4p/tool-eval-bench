@@ -22,35 +22,70 @@ from tool_eval_bench.domain.scenarios import (
     ScenarioState,
     ToolCallRecord,
 )
-
+from tool_eval_bench.evals.helpers import (
+    answer_contains_number as _answer_contains_number,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers (shared via evals.helpers — eliminates duplication across packs)
 # ---------------------------------------------------------------------------
-
 from tool_eval_bench.evals.helpers import (
     as_str as _as_str,
+)
+from tool_eval_bench.evals.helpers import (
     as_str_list as _as_str_list,
-    normalize as _normalize,
-    includes_text as _includes_text,
-    answer_contains_number as _answer_contains_number,
-    full_assistant_transcript as _full_assistant_transcript,
-    tool_calls_by_name as _tool_calls_by_name,
-    has_tool_call as _has_tool_call,
-    first_call as _first_call,
-    is_only_tool as _is_only_tool,
-    contains_refusal as _contains_refusal,
+)
+from tool_eval_bench.evals.helpers import (
     asks_for_clarification as _asks_for_clarification,
-    parse_math_expression as _parse_math_expression,
-    generic_tool_fallback as _generic_tool_fallback,
-    datetime_matches as _datetime_matches,
+)
+from tool_eval_bench.evals.helpers import (
+    contains_refusal as _contains_refusal,
+)
+from tool_eval_bench.evals.helpers import (
     date_matches as _date_matches,
-    with_noise as _noise,
-    pass_eval as _pass,
-    partial_eval as _partial,
+)
+from tool_eval_bench.evals.helpers import (
+    datetime_matches as _datetime_matches,
+)
+from tool_eval_bench.evals.helpers import (
     fail_eval as _fail,
 )
-
+from tool_eval_bench.evals.helpers import (
+    first_call as _first_call,
+)
+from tool_eval_bench.evals.helpers import (
+    full_assistant_transcript as _full_assistant_transcript,
+)
+from tool_eval_bench.evals.helpers import (
+    generic_tool_fallback as _generic_tool_fallback,
+)
+from tool_eval_bench.evals.helpers import (
+    has_tool_call as _has_tool_call,
+)
+from tool_eval_bench.evals.helpers import (
+    includes_text as _includes_text,
+)
+from tool_eval_bench.evals.helpers import (
+    is_only_tool as _is_only_tool,
+)
+from tool_eval_bench.evals.helpers import (
+    normalize as _normalize,
+)
+from tool_eval_bench.evals.helpers import (
+    parse_math_expression as _parse_math_expression,
+)
+from tool_eval_bench.evals.helpers import (
+    partial_eval as _partial,
+)
+from tool_eval_bench.evals.helpers import (
+    pass_eval as _pass,
+)
+from tool_eval_bench.evals.helpers import (
+    tool_calls_by_name as _tool_calls_by_name,
+)
+from tool_eval_bench.evals.helpers import (
+    with_noise as _noise,
+)
 
 # ===================================================================
 # TC-01: Direct Specialist Match
@@ -705,39 +740,33 @@ SCENARIO_DISPLAY_DETAILS: dict[str, ScenarioDisplayDetail] = {
 # Extended scenario packs (optional)
 # ---------------------------------------------------------------------------
 
-from tool_eval_bench.evals.scenarios_extended import (  # noqa: E402
-    EXTENDED_DISPLAY_DETAILS,
-    EXTENDED_SCENARIOS,
-)
-
-from tool_eval_bench.evals.scenarios_agentic import (  # noqa: E402
-    AGENTIC_DISPLAY_DETAILS,
-    AGENTIC_SCENARIOS,
-)
-
-from tool_eval_bench.evals.scenarios_large_toolset import (  # noqa: E402
-    LARGE_TOOLSET_DISPLAY_DETAILS,
-    LARGE_TOOLSET_SCENARIOS,
-)
-
-from tool_eval_bench.evals.scenarios_planning import (  # noqa: E402
-    PLANNING_DISPLAY_DETAILS,
-    PLANNING_SCENARIOS,
-)
-
 from tool_eval_bench.evals.scenarios_adversarial import (  # noqa: E402
     ADVERSARIAL_DISPLAY_DETAILS,
     ADVERSARIAL_SCENARIOS,
 )
-
-from tool_eval_bench.evals.scenarios_structured import (  # noqa: E402
-    STRUCTURED_DISPLAY_DETAILS,
-    STRUCTURED_SCENARIOS,
+from tool_eval_bench.evals.scenarios_agentic import (  # noqa: E402
+    AGENTIC_DISPLAY_DETAILS,
+    AGENTIC_SCENARIOS,
 )
-
+from tool_eval_bench.evals.scenarios_extended import (  # noqa: E402
+    EXTENDED_DISPLAY_DETAILS,
+    EXTENDED_SCENARIOS,
+)
 from tool_eval_bench.evals.scenarios_hardmode import (  # noqa: E402
     HARDMODE_DISPLAY_DETAILS,
     HARDMODE_SCENARIOS,
+)
+from tool_eval_bench.evals.scenarios_large_toolset import (  # noqa: E402
+    LARGE_TOOLSET_DISPLAY_DETAILS,
+    LARGE_TOOLSET_SCENARIOS,
+)
+from tool_eval_bench.evals.scenarios_planning import (  # noqa: E402
+    PLANNING_DISPLAY_DETAILS,
+    PLANNING_SCENARIOS,
+)
+from tool_eval_bench.evals.scenarios_structured import (  # noqa: E402
+    STRUCTURED_DISPLAY_DETAILS,
+    STRUCTURED_SCENARIOS,
 )
 
 ALL_SCENARIOS: list[ScenarioDefinition] = sorted(

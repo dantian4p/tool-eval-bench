@@ -9,37 +9,7 @@ from tool_eval_bench.domain.scenarios import (
     ToolResultRecord,
 )
 
-
-def _make_state(
-    tool_calls: list[dict] | None = None,
-    tool_results: list[dict] | None = None,
-    final_answer: str = "",
-    assistant_messages: list[str] | None = None,
-) -> ScenarioState:
-    state = ScenarioState()
-    state.final_answer = final_answer
-    state.assistant_messages = assistant_messages or ([final_answer] if final_answer else [])
-    if tool_calls:
-        for tc in tool_calls:
-            state.tool_calls.append(
-                ToolCallRecord(
-                    id=tc.get("id", f"call_{len(state.tool_calls)}"),
-                    name=tc["name"],
-                    raw_arguments="{}",
-                    arguments=tc.get("arguments", {}),
-                    turn=tc.get("turn", 1),
-                )
-            )
-    if tool_results:
-        for tr in tool_results:
-            state.tool_results.append(
-                ToolResultRecord(
-                    call_id=tr.get("call_id", "call_0"),
-                    name=tr.get("name", "unknown"),
-                    result=tr.get("result"),
-                )
-            )
-    return state
+from conftest import make_state as _make_state
 
 
 def _get_scenario(sc_id: str):

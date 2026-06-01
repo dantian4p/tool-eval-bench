@@ -35,7 +35,12 @@ from tool_eval_bench.domain.errors import (
     NO_MODELS,
     NO_SERVER,
 )
-from tool_eval_bench.domain.scenarios import Category, ScenarioDefinition, ScenarioResult, ScenarioStatus
+from tool_eval_bench.domain.scenarios import (
+    Category,
+    ScenarioDefinition,
+    ScenarioResult,
+    ScenarioStatus,
+)
 from tool_eval_bench.runner.service import BenchmarkService
 from tool_eval_bench.storage.reports import MarkdownReporter
 
@@ -827,7 +832,7 @@ def _run_llama_benchy(
         table.add_column("Total (ms)", justify="right", width=10)
         table.add_column("Tokens", justify="right", width=10)
 
-        for lbl, s in zip(labels, ok_samples):
+        for lbl, s in zip(labels, ok_samples, strict=False):
             table.add_row(
                 lbl,
                 f"c{s.concurrency}",
@@ -1096,15 +1101,19 @@ def _run_spec_bench(
 
 from tool_eval_bench.cli.history import (  # noqa: E402
     compare_runs as _compare_runs,
+)
+from tool_eval_bench.cli.history import (
     print_diff as _print_diff,
+)
+from tool_eval_bench.cli.history import (
     print_history as _print_history,
 )
-
 from tool_eval_bench.cli.leaderboard import (  # noqa: E402
     export_runs as _export_runs,
+)
+from tool_eval_bench.cli.leaderboard import (
     print_leaderboard as _print_leaderboard,
 )
-
 
 # ---------------------------------------------------------------------------
 # Main
@@ -1203,6 +1212,7 @@ def _run_gsm8k_benchmark(
 
     # -- Phase 2: Evaluate with model --
     async def run() -> None:
+        from rich.live import Live
         from rich.progress import (
             BarColumn,
             MofNCompleteColumn,
@@ -1212,7 +1222,6 @@ def _run_gsm8k_benchmark(
             TimeElapsedColumn,
             TimeRemainingColumn,
         )
-        from rich.live import Live
 
         eval_total = limit if limit > 0 else len(dataset_items)
 
@@ -1515,6 +1524,8 @@ def _run_mmlu_benchmark(
 
     # -- Phase 2: Evaluate with model --
     async def run() -> None:
+        from rich.console import Group
+        from rich.live import Live
         from rich.progress import (
             BarColumn,
             MofNCompleteColumn,
@@ -1524,8 +1535,6 @@ def _run_mmlu_benchmark(
             TimeElapsedColumn,
             TimeRemainingColumn,
         )
-        from rich.live import Live
-        from rich.console import Group
 
         eval_total = limit if limit > 0 else len(test_items)
         if subjects_list:
@@ -1672,9 +1681,10 @@ def _run_mmlu_benchmark(
                   f"Tokens: {result.total_tokens:,}[/]")
 
     # Write report
+    from datetime import datetime, timezone
+
     from tool_eval_bench.storage.reports import MarkdownReporter
     from tool_eval_bench.utils.ids import build_run_id
-    from datetime import datetime, timezone
 
     run_config = _with_config_fingerprint({
         "model": model, "base_url": base_url,
@@ -1807,6 +1817,8 @@ def _run_ifeval_benchmark(
 
     # -- Phase 2: Evaluate with model --
     async def run() -> None:
+        from rich.console import Group
+        from rich.live import Live
         from rich.progress import (
             BarColumn,
             MofNCompleteColumn,
@@ -1816,8 +1828,6 @@ def _run_ifeval_benchmark(
             TimeElapsedColumn,
             TimeRemainingColumn,
         )
-        from rich.live import Live
-        from rich.console import Group
 
         eval_total = limit if limit > 0 else len(dataset_items)
 
@@ -1955,9 +1965,10 @@ def _run_ifeval_benchmark(
                   f"Tokens: {result.total_tokens:,}[/]")
 
     # Write report
+    from datetime import datetime, timezone
+
     from tool_eval_bench.storage.reports import MarkdownReporter
     from tool_eval_bench.utils.ids import build_run_id
-    from datetime import datetime, timezone
 
     run_config = _with_config_fingerprint({
         "model": model, "base_url": base_url,
@@ -3118,7 +3129,7 @@ def _parse_sweep_range(sweep_str: str) -> tuple[float, float]:
         raise ValueError(
             f"Invalid sweep range '{sweep_str}'. START and END must be numbers "
             f"(e.g. 0.5-1.0)"
-        )
+        ) from None
     start = max(0.0, min(1.0, start))
     end = max(0.0, min(1.0, end))
     if start >= end:

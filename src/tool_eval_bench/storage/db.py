@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -50,7 +51,7 @@ class RunRepository:
         try:
             self.close()
         except Exception:
-            pass
+            logging.getLogger(__name__).debug("Error closing DB connection in __del__")
 
     def _init_db(self) -> None:
         with self._conn as conn:

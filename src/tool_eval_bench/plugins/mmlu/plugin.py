@@ -172,7 +172,10 @@ class MMLUPlugin(BenchmarkPlugin):
                 await on_progress(completed, total, results[idx])
 
         tasks = [eval_one(i, item) for i, item in enumerate(all_items)]
-        await asyncio.gather(*tasks)
+        gather_results = await asyncio.gather(*tasks, return_exceptions=True)
+        for i, exc in enumerate(gather_results):
+            if isinstance(exc, BaseException):
+                logger.error("MMLU question %d crashed: %s", i, exc)
 
         duration = time.monotonic() - t_start
         accuracy = correct_count / total * 100

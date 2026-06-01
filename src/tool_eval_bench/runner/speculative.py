@@ -29,8 +29,8 @@ from dataclasses import dataclass
 import httpx
 
 from tool_eval_bench.runner.throughput import (
-    TokenizerConfig,
     ThroughputSample,
+    TokenizerConfig,
     _build_messages,
     _headers,
     _stream_one,

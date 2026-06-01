@@ -116,7 +116,7 @@ async def _tokenize_text(
             count = data.get("count") or len(data.get("tokens", []))
             return count if count > 0 else None
     except Exception:
-        pass  # /tokenize unavailable — expected for non-vLLM backends
+        logger.debug("/tokenize unavailable — expected for non-vLLM backends")
     return None
 
 
@@ -376,6 +376,7 @@ async def estimate_latency(
             resp = await client.get(url, headers=hdrs)
             resp.raise_for_status()
         except Exception:
+            logger.debug("Latency probe round failed, skipping")
             continue  # latency probe failure — skip this round
         times.append((time.perf_counter() - t0) * 1000)
 
@@ -737,7 +738,13 @@ async def measure_concurrent(
         _stream_one(client, base_url, model, messages, tg, api_key, tok_cfg)
         for _ in range(concurrency)
     ]
-    results = await asyncio.gather(*tasks)
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    # Convert any bare exceptions to error samples
+    results = [
+        r if isinstance(r, ThroughputSample)
+        else ThroughputSample(error=str(r), concurrency=concurrency)
+        for r in results
+    ]
     total_wall_ms = (time.perf_counter() - t0) * 1000
 
     # Aggregate

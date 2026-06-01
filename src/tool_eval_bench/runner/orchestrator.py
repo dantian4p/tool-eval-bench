@@ -592,7 +592,18 @@ async def run_all_scenarios(
                     progress_counter += 1
 
     tasks = [_run_one(idx, sc) for idx, sc in enumerate(target_scenarios)]
-    await asyncio.gather(*tasks)
+    gather_results = await asyncio.gather(*tasks, return_exceptions=True)
+    for i, exc in enumerate(gather_results):
+        if isinstance(exc, BaseException):
+            sc = target_scenarios[i]
+            logger.error("Scenario %s crashed: %s", sc.id, exc)
+            ordered_results[i] = ScenarioResult(
+                scenario_id=sc.id,
+                status=ScenarioStatus.FAIL,
+                points=0,
+                summary=f"Unhandled error: {exc}",
+                tool_call_arg_bytes=0,
+            )
 
     final_results = [r for r in ordered_results if r is not None]
     return score_results(final_results, target_scenarios, alpha=alpha,

@@ -31,44 +31,10 @@ from tool_eval_bench.evals.scenarios_planning import PLANNING_SCENARIOS
 from tool_eval_bench.evals.scenarios_adversarial import ADVERSARIAL_SCENARIOS
 from tool_eval_bench.evals.helpers import contains_refusal, asks_for_clarification
 
+from conftest import make_state as _make_state, make_tool_call as _make_call
+
 ALL = (SCENARIOS + EXTENDED_SCENARIOS + AGENTIC_SCENARIOS + LARGE_TOOLSET_SCENARIOS
        + PLANNING_SCENARIOS + ADVERSARIAL_SCENARIOS)
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _make_state(
-    *,
-    tool_calls: list[ToolCallRecord] | None = None,
-    final_answer: str = "",
-    assistant_messages: list[str] | None = None,
-) -> ScenarioState:
-    state = ScenarioState()
-    if tool_calls:
-        state.tool_calls = tool_calls
-    state.final_answer = final_answer
-    if assistant_messages:
-        state.assistant_messages = assistant_messages
-    else:
-        state.assistant_messages = [final_answer] if final_answer else []
-    return state
-
-
-def _make_call(
-    name: str = "unknown_tool",
-    arguments: dict | None = None,
-    turn: int = 1,
-) -> ToolCallRecord:
-    args = arguments or {}
-    return ToolCallRecord(
-        id=f"tc_{turn}",
-        name=name,
-        raw_arguments=json.dumps(args),
-        arguments=args,
-        turn=turn,
-    )
 
 
 # ---------------------------------------------------------------------------

@@ -19,7 +19,6 @@ from rich.table import Table
 
 from tool_eval_bench.utils.ids import build_config_fingerprint
 
-
 # ---------------------------------------------------------------------------
 # Score-to-color helpers
 # ---------------------------------------------------------------------------

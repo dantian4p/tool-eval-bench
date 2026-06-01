@@ -161,7 +161,10 @@ class GSM8KPlugin(BenchmarkPlugin):
                             await on_progress(progress_counter, total, result)
 
             tasks = [_run_one(idx, item) for idx, item in enumerate(items)]
-            await asyncio.gather(*tasks)
+            gather_results = await asyncio.gather(*tasks, return_exceptions=True)
+            for i, exc in enumerate(gather_results):
+                if isinstance(exc, BaseException):
+                    logger.error("GSM8K question %d crashed: %s", i, exc)
 
             for r in ordered:
                 if r is not None:

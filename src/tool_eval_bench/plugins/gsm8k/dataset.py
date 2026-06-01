@@ -165,7 +165,12 @@ def _download_dataset(
             )
             resp = client.get(url)
             resp.raise_for_status()
-            data = resp.json()
+            try:
+                data = resp.json()
+            except Exception as exc:
+                raise RuntimeError(
+                    f"HuggingFace API returned non-JSON at offset {offset}: {exc}"
+                ) from exc
 
             rows_data = data.get("rows", [])
             if not rows_data:

@@ -155,7 +155,16 @@ class OpenAICompatibleAdapter(BackendAdapter):
                 raw_response={},
                 elapsed_ms=elapsed_ms,
             )
-        data = response.json()
+        try:
+            data = response.json()
+        except Exception as exc:
+            logger.warning("Malformed JSON in response from %s: %s", url, exc)
+            return ChatCompletionResult(
+                content="[malformed response]",
+                tool_calls=[],
+                raw_response={},
+                elapsed_ms=elapsed_ms,
+            )
         return self._parse_response(data, elapsed_ms)
 
     async def _stream_request(

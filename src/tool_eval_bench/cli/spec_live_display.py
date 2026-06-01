@@ -12,6 +12,7 @@ Rendering helpers (gauge bars, sparklines, etc.) live in the shared
 from __future__ import annotations
 
 import asyncio
+import logging
 import signal
 import time
 from collections import deque
@@ -33,8 +34,8 @@ from tool_eval_bench.cli.spec_live_rendering import (
     _gauge_bar,
     _per_position_decay_summary,
     _position_bars_horizontal,
-    _spec_method_label,
     _sparkline,
+    _spec_method_label,
 )
 from tool_eval_bench.runner.spec_live import (
     MetricsSnapshot,
@@ -45,6 +46,8 @@ from tool_eval_bench.runner.spec_live import (
     probe_server_spec_info,
     scrape_snapshot,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _build_dashboard(
@@ -537,7 +540,7 @@ async def run_spec_live(
             base_url, api_key=api_key, primary_model=model_name,
         )
     except Exception:
-        pass  # non-fatal — we'll fall back to Prometheus heuristics
+        logger.debug("Server spec info probe failed — using Prometheus heuristics")
 
     history: deque[SpecLiveDelta] = deque(maxlen=_HISTORY_LEN)
     prev_snap: MetricsSnapshot | None = None
@@ -705,11 +708,11 @@ async def run_spec_live(
                             _loop = asyncio.get_event_loop()
                             fut: asyncio.Future[None] = _loop.create_future()
 
-                            def _readable() -> None:
+                            def _readable(_evt=reset_event) -> None:  # noqa: B023
                                 if not fut.done():
                                     ch = _sys.stdin.read(1)
                                     if ch == "\x12":  # Ctrl+R
-                                        reset_event.set()
+                                        _evt.set()
                                     fut.set_result(None)
 
                             _loop.add_reader(fd, _readable)
@@ -721,12 +724,12 @@ async def run_spec_live(
                                 try:
                                     _loop.remove_reader(fd)
                                 except Exception:
-                                    pass
+                                    logger.debug("Failed to remove stdin reader")
                         finally:
                             try:
                                 termios.tcsetattr(fd, termios.TCSADRAIN, old)
                             except Exception:
-                                pass
+                                logger.debug("Failed to restore terminal settings")
 
                     # Run stdin check with poll timeout
                     try:
