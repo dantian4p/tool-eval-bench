@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import json
 
-
 from tool_eval_bench.domain.scenarios import (
     ScenarioState,
     ScenarioStatus,
@@ -25,7 +24,6 @@ from tool_eval_bench.domain.scenarios import (
     ToolResultRecord,
 )
 from tool_eval_bench.evals.scenarios import SCENARIOS
-
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -5,16 +5,14 @@ by constructing ScenarioState objects manually.
 """
 
 
+from conftest import make_state as _make_state
+
 from tool_eval_bench.domain.scenarios import (
     Category,
-    ScenarioState,
     ScenarioStatus,
-    ToolCallRecord,
 )
 from tool_eval_bench.evals.scenarios import SCENARIOS
 from tool_eval_bench.runner.orchestrator import score_results
-
-from conftest import make_state as _make_state
 
 
 class TestScenarioRegistry:
@@ -380,7 +378,11 @@ class TestTrialAggregation:
 
     def test_identical_trials_zero_stddev(self) -> None:
         from tool_eval_bench.cli.bench import _aggregate_trials
-        from tool_eval_bench.domain.scenarios import CategoryScore, ModelScoreSummary, ScenarioResult
+        from tool_eval_bench.domain.scenarios import (
+            CategoryScore,
+            ModelScoreSummary,
+            ScenarioResult,
+        )
 
         sr = ScenarioResult(scenario_id="TC-01", status=ScenarioStatus.PASS, points=2, summary="ok")
         cs = CategoryScore(category=Category.A, label="Tool Selection", earned=6, max_points=6, percent=100.0)
@@ -400,7 +402,11 @@ class TestTrialAggregation:
 
     def test_different_trials_nonzero_stddev(self) -> None:
         from tool_eval_bench.cli.bench import _aggregate_trials
-        from tool_eval_bench.domain.scenarios import CategoryScore, ModelScoreSummary, ScenarioResult
+        from tool_eval_bench.domain.scenarios import (
+            CategoryScore,
+            ModelScoreSummary,
+            ScenarioResult,
+        )
 
         sr1 = ScenarioResult(scenario_id="TC-01", status=ScenarioStatus.PASS, points=2, summary="ok")
         sr2 = ScenarioResult(scenario_id="TC-01", status=ScenarioStatus.FAIL, points=0, summary="fail")
@@ -478,6 +484,7 @@ class TestSQLitePath:
 
     def test_custom_path_accepted(self) -> None:
         import tempfile
+
         from tool_eval_bench.storage.db import RunRepository
 
         with tempfile.TemporaryDirectory() as tmp:

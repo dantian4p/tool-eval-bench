@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 import pytest
 
 from tool_eval_bench.plugins.ifeval.checkers import (
@@ -12,7 +11,6 @@ from tool_eval_bench.plugins.ifeval.checkers import (
 from tool_eval_bench.plugins.ifeval.evaluator import (
     evaluate_prompt,
 )
-
 
 # ---------------------------------------------------------------------------
 # Length constraints

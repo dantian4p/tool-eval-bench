@@ -753,6 +753,7 @@ class TestSafeMathParser:
 
     def test_complex_expression(self) -> None:
         from pytest import approx
+
         from tool_eval_bench.evals.helpers import parse_math_expression
         assert parse_math_expression("372520 * 0.02") == approx(7450.4)
 

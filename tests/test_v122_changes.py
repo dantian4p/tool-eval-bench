@@ -23,7 +23,6 @@ from tool_eval_bench.domain.scenarios import (
 )
 from tool_eval_bench.evals.scenarios import ALL_SCENARIOS
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

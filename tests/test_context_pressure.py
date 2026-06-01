@@ -23,16 +23,15 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from tool_eval_bench.runner.context_pressure import (
+    _RESERVED_FOR_OUTPUT,
+    _RESERVED_FOR_SCENARIO,
     ContextPressureConfig,
     build_pressure_messages,
     compute_fill_budget,
     detect_context_size,
     detect_kv_capacity,
     prepare_context_pressure,
-    _RESERVED_FOR_OUTPUT,
-    _RESERVED_FOR_SCENARIO,
 )
-
 
 # ---------------------------------------------------------------------------
 # compute_fill_budget
@@ -204,7 +203,7 @@ class TestBuildPressureMessages:
         user_a = [m["content"] for m in msgs_a if m["role"] == "user"]
         user_b = [m["content"] for m in msgs_b if m["role"] == "user"]
         # At least some chunks should differ (noise makes them unique)
-        differences = sum(1 for a, b in zip(user_a, user_b) if a != b)
+        differences = sum(1 for a, b in zip(user_a, user_b, strict=False) if a != b)
         assert differences > 0, "Consecutive builds should produce different content"
 
     def test_noise_tokens_present(self) -> None:
@@ -223,7 +222,7 @@ class TestBuildPressureMessages:
         msgs_a = build_pressure_messages(cfg, seed=42)
         msgs_b = build_pressure_messages(cfg, seed=42)
         assert len(msgs_a) == len(msgs_b)
-        for a, b in zip(msgs_a, msgs_b):
+        for a, b in zip(msgs_a, msgs_b, strict=True):
             assert a["content"] == b["content"]
 
     def test_different_seeds_produce_different_content(self) -> None:
@@ -233,7 +232,7 @@ class TestBuildPressureMessages:
         msgs_b = build_pressure_messages(cfg, seed=99)
         user_a = [m["content"] for m in msgs_a if m["role"] == "user"]
         user_b = [m["content"] for m in msgs_b if m["role"] == "user"]
-        differences = sum(1 for a, b in zip(user_a, user_b) if a != b)
+        differences = sum(1 for a, b in zip(user_a, user_b, strict=False) if a != b)
         assert differences > 0, "Different seeds should produce different content"
 
     def test_same_seed_different_fill_produces_different_content(self) -> None:
@@ -726,7 +725,7 @@ class TestCalibratePressureMessages:
     def _make_messages(self, n_pairs: int = 3, content_len: int = 2000) -> list[dict]:
         """Build synthetic filler messages for testing."""
         msgs = []
-        for i in range(n_pairs):
+        for _ in range(n_pairs):
             msgs.append({"role": "user", "content": "x" * content_len})
             msgs.append({"role": "assistant", "content": "Understood."})
         return msgs
@@ -1199,6 +1198,7 @@ class TestPressureSweepIntegration:
 
         # Verify the sweep function signature accepts display_url
         import inspect
+
         from tool_eval_bench.cli.bench import _run_pressure_sweep
         sig = inspect.signature(_run_pressure_sweep)
         assert "display_url" in sig.parameters

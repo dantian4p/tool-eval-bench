@@ -8,20 +8,13 @@ import time
 import httpx
 import pytest
 
-from tool_eval_bench.runner.speculative import (
-    SpecDecodeSample,
-    _metrics_url,
-    _get_prompt_for_type,
-    scrape_spec_metrics,
-    detect_spec_decoding,
-)
-from tool_eval_bench.runner.async_tools import (
-    AsyncToolExecutor,
-    AsyncToolResult,
-    AsyncToolSpec,
-    AsyncToolStatus,
-    create_example_async_specs,
-    format_async_status,
+from tool_eval_bench.domain.models import RunContext
+from tool_eval_bench.domain.scenarios import (
+    Category,
+    CategoryScore,
+    ModelScoreSummary,
+    ScenarioResult,
+    ScenarioStatus,
 )
 from tool_eval_bench.evals.noise import (
     enrich_calendar,
@@ -37,17 +30,23 @@ from tool_eval_bench.evals.noise import (
     enrich_translation,
     enrich_weather,
 )
+from tool_eval_bench.runner.async_tools import (
+    AsyncToolExecutor,
+    AsyncToolResult,
+    AsyncToolSpec,
+    AsyncToolStatus,
+    create_example_async_specs,
+    format_async_status,
+)
+from tool_eval_bench.runner.speculative import (
+    SpecDecodeSample,
+    _get_prompt_for_type,
+    _metrics_url,
+    detect_spec_decoding,
+    scrape_spec_metrics,
+)
 from tool_eval_bench.storage.db import RunRepository
 from tool_eval_bench.storage.reports import MarkdownReporter, _render_run_context
-from tool_eval_bench.domain.models import RunContext
-from tool_eval_bench.domain.scenarios import (
-    Category,
-    CategoryScore,
-    ModelScoreSummary,
-    ScenarioResult,
-    ScenarioStatus,
-)
-
 
 # ---------------------------------------------------------------------------
 # speculative: _metrics_url

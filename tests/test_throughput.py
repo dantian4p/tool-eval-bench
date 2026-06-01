@@ -12,15 +12,14 @@ import httpx
 import pytest
 
 from tool_eval_bench.runner.throughput import (
-    TokenizerConfig,
-    ThroughputSample,
-    _build_filler_heuristic,
     _DEFAULT_CHARS_PER_TOKEN,
     _FILLER_PARAGRAPH,
+    ThroughputSample,
+    TokenizerConfig,
+    _build_filler_heuristic,
     _headers,
     _tokenize_url,
 )
-
 
 # ---------------------------------------------------------------------------
 # TokenizerConfig

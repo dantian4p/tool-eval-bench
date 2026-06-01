@@ -10,6 +10,7 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
+from conftest import make_state as _make_state
 
 from tool_eval_bench.adapters.base import BackendAdapter, ChatCompletionResult
 from tool_eval_bench.domain.scenarios import (
@@ -17,12 +18,10 @@ from tool_eval_bench.domain.scenarios import (
     ScenarioDefinition,
     ScenarioEvaluation,
     ScenarioResult,
-    ScenarioState,
     ScenarioStatus,
     ToolCallRecord,
 )
 from tool_eval_bench.runner.judge import judge_failed_scenarios
-
 
 # ===========================================================================
 # Fixtures
@@ -46,8 +45,6 @@ def _make_scenario(
         evaluate=lambda state: ScenarioEvaluation(ScenarioStatus.FAIL, 0, "No tool call."),
     )
 
-
-from conftest import make_state as _make_state
 
 
 def _make_result(

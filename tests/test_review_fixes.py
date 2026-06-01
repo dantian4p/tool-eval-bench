@@ -21,7 +21,6 @@ from tool_eval_bench.evals.helpers import (
 )
 from tool_eval_bench.evals.noise import _seed_from_payload, enrich_payload
 
-
 # ---------------------------------------------------------------------------
 # TEST-03: _parse_int_list
 # ---------------------------------------------------------------------------
@@ -324,6 +323,7 @@ class TestReferenceDateValidation:
     def test_invalid_date_raises(self) -> None:
         """Invalid --reference-date should raise ValueError, not silently fall through."""
         from unittest.mock import MagicMock
+
         from tool_eval_bench.runner.service import BenchmarkService
 
         service = BenchmarkService(
@@ -362,8 +362,9 @@ class TestBootstrapCI:
         assert hi == 90.0
 
     def test_ci_contains_mean(self) -> None:
-        from tool_eval_bench.cli.bench import _bootstrap_ci
         from statistics import mean
+
+        from tool_eval_bench.cli.bench import _bootstrap_ci
         values = [80.0, 85.0, 90.0, 82.0, 88.0]
         lo, hi = _bootstrap_ci(values)
         m = mean(values)

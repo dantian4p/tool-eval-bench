@@ -13,25 +13,21 @@ Tests cover:
 
 from __future__ import annotations
 
-import json
-
 import pytest
+from conftest import make_state as _make_state
+from conftest import make_tool_call as _make_call
 
 from tool_eval_bench.domain.scenarios import (
     ScenarioEvaluation,
-    ScenarioState,
     ScenarioStatus,
-    ToolCallRecord,
 )
+from tool_eval_bench.evals.helpers import asks_for_clarification, contains_refusal
 from tool_eval_bench.evals.scenarios import SCENARIOS
-from tool_eval_bench.evals.scenarios_extended import EXTENDED_SCENARIOS
+from tool_eval_bench.evals.scenarios_adversarial import ADVERSARIAL_SCENARIOS
 from tool_eval_bench.evals.scenarios_agentic import AGENTIC_SCENARIOS
+from tool_eval_bench.evals.scenarios_extended import EXTENDED_SCENARIOS
 from tool_eval_bench.evals.scenarios_large_toolset import LARGE_TOOLSET_SCENARIOS
 from tool_eval_bench.evals.scenarios_planning import PLANNING_SCENARIOS
-from tool_eval_bench.evals.scenarios_adversarial import ADVERSARIAL_SCENARIOS
-from tool_eval_bench.evals.helpers import contains_refusal, asks_for_clarification
-
-from conftest import make_state as _make_state, make_tool_call as _make_call
 
 ALL = (SCENARIOS + EXTENDED_SCENARIOS + AGENTIC_SCENARIOS + LARGE_TOOLSET_SCENARIOS
        + PLANNING_SCENARIOS + ADVERSARIAL_SCENARIOS)

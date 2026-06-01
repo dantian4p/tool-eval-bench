@@ -6,12 +6,11 @@ import pytest
 
 from tool_eval_bench.runner.speculative import (
     SpecDecodeCounters,
-    SpecDecodeSample,
     SpecDecodeInfo,
+    SpecDecodeSample,
     parse_prometheus_spec_metrics,
 )
 from tool_eval_bench.runner.throughput import ThroughputSample
-
 
 # ---------------------------------------------------------------------------
 # SpecDecodeCounters

@@ -22,7 +22,6 @@ from tool_eval_bench.runner.service import BenchmarkService
 from tool_eval_bench.storage.db import RunRepository
 from tool_eval_bench.storage.reports import MarkdownReporter
 
-
 # ---------------------------------------------------------------------------
 # Mock adapter that produces correct tool calls for TC-01
 # ---------------------------------------------------------------------------

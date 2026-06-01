@@ -2,14 +2,11 @@
 
 import json
 
-from tool_eval_bench.domain.scenarios import (
-    ScenarioState,
-    ScenarioStatus,
-    ToolCallRecord,
-    ToolResultRecord,
-)
-
 from conftest import make_state as _make_state
+
+from tool_eval_bench.domain.scenarios import (
+    ScenarioStatus,
+)
 
 
 def _get_scenario(sc_id: str):

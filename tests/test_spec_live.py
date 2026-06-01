@@ -20,7 +20,6 @@ from tool_eval_bench.runner.spec_live import (
     metrics_url_from_base,
 )
 
-
 # ---------------------------------------------------------------------------
 # MetricsSnapshot parsing
 # ---------------------------------------------------------------------------
@@ -458,8 +457,9 @@ class TestDashboardHelpers:
 
         table = _position_bars({})
         # Should render without error — empty table (panel hidden when no data)
-        from rich.console import Console
         from io import StringIO
+
+        from rich.console import Console
 
         out = StringIO()
         Console(file=out, width=60, no_color=True).print(table)
@@ -468,9 +468,11 @@ class TestDashboardHelpers:
         assert text == ""
 
     def test_position_bars_with_data(self):
-        from tool_eval_bench.cli.spec_live_rendering import _position_bars
-        from rich.console import Console
         from io import StringIO
+
+        from rich.console import Console
+
+        from tool_eval_bench.cli.spec_live_rendering import _position_bars
 
         rates = {0: 0.8, 1: 0.6, 2: 0.4, 3: 0.2}
         table = _position_bars(rates)
@@ -518,8 +520,9 @@ class TestBuildDashboard:
         return SpecLiveDelta(**defaults)
 
     def _render(self, panel) -> str:
-        from rich.console import Console
         from io import StringIO
+
+        from rich.console import Console
 
         out = StringIO()
         Console(file=out, width=100, no_color=True).print(panel)
@@ -1171,9 +1174,11 @@ class TestHorizontalBarsScaling:
     """Test horizontal per-position bars scale to many positions."""
 
     def test_six_positions_single_row(self):
-        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
-        from rich.console import Console
         from io import StringIO
+
+        from rich.console import Console
+
+        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
 
         rates = {i: max(0.1, 0.9 - i * 0.15) for i in range(6)}
         table = _position_bars_horizontal(rates, inner_w=120)
@@ -1184,9 +1189,11 @@ class TestHorizontalBarsScaling:
         assert "p5" in text
 
     def test_twelve_positions_multi_row(self):
-        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
-        from rich.console import Console
         from io import StringIO
+
+        from rich.console import Console
+
+        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
 
         rates = {i: max(0.05, 0.9 - i * 0.07) for i in range(12)}
         table = _position_bars_horizontal(rates, inner_w=100)
@@ -1201,9 +1208,11 @@ class TestHorizontalBarsScaling:
         assert len(lines) >= 2
 
     def test_narrow_terminal_still_works(self):
-        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
-        from rich.console import Console
         from io import StringIO
+
+        from rich.console import Console
+
+        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
 
         rates = {i: max(0.1, 0.9 - i * 0.15) for i in range(6)}
         table = _position_bars_horizontal(rates, inner_w=50)
@@ -1244,8 +1253,9 @@ class TestDashboardSpecBadge:
         return SpecLiveDelta(**defaults)
 
     def _render(self, panel) -> str:
-        from rich.console import Console
         from io import StringIO
+
+        from rich.console import Console
         out = StringIO()
         Console(file=out, width=120, no_color=True).print(panel)
         return out.getvalue()
@@ -1456,8 +1466,9 @@ class TestDashboardWithServerSpecInfo:
         return SpecLiveDelta(**defaults)
 
     def _render(self, panel) -> str:
-        from rich.console import Console
         from io import StringIO
+
+        from rich.console import Console
         out = StringIO()
         Console(file=out, width=120, no_color=True).print(panel)
         return out.getvalue()
@@ -1562,9 +1573,11 @@ class TestHighKPositionScaling:
 
     def test_twenty_positions(self):
         """20 positions should render without errors."""
-        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
-        from rich.console import Console
         from io import StringIO
+
+        from rich.console import Console
+
+        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
 
         rates = {i: max(0.02, 0.95 - i * 0.04) for i in range(20)}
         table = _position_bars_horizontal(rates, inner_w=120)
@@ -1576,9 +1589,11 @@ class TestHighKPositionScaling:
 
     def test_thirty_two_positions(self):
         """32 positions (extreme k) should wrap to multiple rows."""
-        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
-        from rich.console import Console
         from io import StringIO
+
+        from rich.console import Console
+
+        from tool_eval_bench.cli.spec_live_rendering import _position_bars_horizontal
 
         rates = {i: max(0.01, 0.90 - i * 0.025) for i in range(32)}
         table = _position_bars_horizontal(rates, inner_w=120)
@@ -1594,9 +1609,11 @@ class TestHighKPositionScaling:
 
     def test_dashboard_with_high_k_positions(self):
         """Full dashboard renders correctly with 20 per-position rates."""
-        from tool_eval_bench.cli.spec_live_display import _build_dashboard
-        from rich.console import Console
         from io import StringIO
+
+        from rich.console import Console
+
+        from tool_eval_bench.cli.spec_live_display import _build_dashboard
 
         delta = SpecLiveDelta(
             elapsed_s=1.0,

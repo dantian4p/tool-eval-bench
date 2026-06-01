@@ -50,19 +50,19 @@ class TestPassAtKMetrics:
 
     def test_pass_at_k_computation(self) -> None:
         """Test that Pass@k correctly identifies scenarios that passed at least once."""
-        from tool_eval_bench.domain.scenarios import (
-            CategoryScore,
-            ModelScoreSummary,
-            ScenarioResult,
-            ScenarioStatus,
-        )
         from tool_eval_bench.cli.bench import _aggregate_trials
 
         # Create 2 trials with 3 scenarios each
         # Scenario A: passes both times → Pass@k=True, Pass^k=True
         # Scenario B: passes once → Pass@k=True, Pass^k=False
         # Scenario C: never passes → Pass@k=False, Pass^k=False
-        from tool_eval_bench.domain.scenarios import Category
+        from tool_eval_bench.domain.scenarios import (
+            Category,
+            CategoryScore,
+            ModelScoreSummary,
+            ScenarioResult,
+            ScenarioStatus,
+        )
 
         def make_summary(results: list[tuple[str, int]]) -> ModelScoreSummary:
             return ModelScoreSummary(
@@ -186,7 +186,10 @@ class TestDeployabilityComposite:
     def test_score_results_with_latency(self) -> None:
         """score_results computes deployability when latency data is present."""
         from tool_eval_bench.domain.scenarios import (
-            Category, ScenarioDefinition, ScenarioResult, ScenarioStatus,
+            Category,
+            ScenarioDefinition,
+            ScenarioResult,
+            ScenarioStatus,
         )
         from tool_eval_bench.runner.orchestrator import score_results
 
@@ -209,7 +212,10 @@ class TestDeployabilityComposite:
     def test_score_results_without_latency(self) -> None:
         """score_results skips deployability when no latency data."""
         from tool_eval_bench.domain.scenarios import (
-            Category, ScenarioDefinition, ScenarioResult, ScenarioStatus,
+            Category,
+            ScenarioDefinition,
+            ScenarioResult,
+            ScenarioStatus,
         )
         from tool_eval_bench.runner.orchestrator import score_results
 

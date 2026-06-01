@@ -15,8 +15,7 @@ from tool_eval_bench.plugins.gsm8k.dataset import (
     _save_to_cache,
 )
 from tool_eval_bench.plugins.gsm8k.plugin import GSM8KPlugin, _rating_for_accuracy
-from tool_eval_bench.plugins.gsm8k.prompts import SYSTEM_PROMPT, FEW_SHOT_EXAMPLES, build_messages
-
+from tool_eval_bench.plugins.gsm8k.prompts import FEW_SHOT_EXAMPLES, SYSTEM_PROMPT, build_messages
 
 # ---------------------------------------------------------------------------
 # Dataset: _extract_ground_truth

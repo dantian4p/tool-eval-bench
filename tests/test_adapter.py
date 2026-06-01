@@ -17,7 +17,6 @@ from tool_eval_bench.adapters.openai_compat import (
     _normalize_tool_calls,
 )
 
-
 # ---------------------------------------------------------------------------
 # _normalize_tool_calls — unit tests
 # ---------------------------------------------------------------------------

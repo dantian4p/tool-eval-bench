@@ -17,8 +17,6 @@ from tool_eval_bench.cli.display import (
     _print_final_panel,
     print_final_report,
 )
-from tool_eval_bench.evals.scenarios import SCENARIOS
-
 from tool_eval_bench.domain.scenarios import (
     Category,
     CategoryScore,
@@ -26,7 +24,7 @@ from tool_eval_bench.domain.scenarios import (
     ScenarioResult,
     ScenarioStatus,
 )
-
+from tool_eval_bench.evals.scenarios import SCENARIOS
 
 # ===========================================================================
 # Fixtures

@@ -5,17 +5,14 @@ replaces tool results with 429/500/503 errors, preventing the model from
 receiving the data it needs.
 """
 
+from conftest import make_state as _make_state
+
 from tool_eval_bench.domain.scenarios import (
-    ScenarioState,
     ScenarioStatus,
-    ToolCallRecord,
-    ToolResultRecord,
 )
 from tool_eval_bench.evals.scenarios import SCENARIOS
-from tool_eval_bench.evals.scenarios_extended import EXTENDED_SCENARIOS
 from tool_eval_bench.evals.scenarios_agentic import AGENTIC_SCENARIOS
-
-from conftest import make_state as _make_state
+from tool_eval_bench.evals.scenarios_extended import EXTENDED_SCENARIOS
 
 
 def _find(scenarios, scenario_id):

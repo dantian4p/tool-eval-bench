@@ -15,7 +15,6 @@ from tool_eval_bench.domain.scenarios import (
 )
 from tool_eval_bench.storage.reports import MarkdownReporter
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

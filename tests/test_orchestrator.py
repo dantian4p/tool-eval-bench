@@ -23,7 +23,6 @@ from tool_eval_bench.domain.scenarios import (
 )
 from tool_eval_bench.runner.orchestrator import run_scenario
 
-
 # ---------------------------------------------------------------------------
 # Mock adapter
 # ---------------------------------------------------------------------------

@@ -14,8 +14,8 @@ from tool_eval_bench.api import (
     format_result,
     run_benchmark,
 )
-from tool_eval_bench.schema import ARGS_SCHEMA as SCHEMA_DIRECT, get_schema
-
+from tool_eval_bench.schema import ARGS_SCHEMA as SCHEMA_DIRECT
+from tool_eval_bench.schema import get_schema
 
 # ---------------------------------------------------------------------------
 # format_result tests

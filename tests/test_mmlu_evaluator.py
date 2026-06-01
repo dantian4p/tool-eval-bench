@@ -2,20 +2,18 @@
 
 from __future__ import annotations
 
-
+from tool_eval_bench.plugins.mmlu.dataset import (
+    CATEGORIES,
+    SUBJECT_CATEGORIES,
+    MMLUItem,
+)
 from tool_eval_bench.plugins.mmlu.evaluator import (
     evaluate_answer,
     extract_answer,
 )
-from tool_eval_bench.plugins.mmlu.dataset import (
-    CATEGORIES,
-    MMLUItem,
-    SUBJECT_CATEGORIES,
-)
 from tool_eval_bench.plugins.mmlu.prompts import (
     build_messages,
 )
-
 
 # ---------------------------------------------------------------------------
 # extract_answer

@@ -3,13 +3,11 @@
 Coverage for TC-51 through TC-63 (Categories M, N, plus C/I/K expansions).
 """
 
-from tool_eval_bench.domain.scenarios import (
-    ScenarioState,
-    ScenarioStatus,
-    ToolCallRecord,
-)
-
 from conftest import make_state as _make_state
+
+from tool_eval_bench.domain.scenarios import (
+    ScenarioStatus,
+)
 
 
 def _get(tid: str):
