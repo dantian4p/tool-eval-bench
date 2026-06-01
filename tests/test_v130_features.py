@@ -16,7 +16,6 @@ from tool_eval_bench.domain.scenarios import (
     ToolCallRecord,
 )
 
-
 # ===========================================================================
 # Leaderboard: _extract_leaderboard_rows
 # ===========================================================================
@@ -301,8 +300,8 @@ class TestJudgePromptBuilding:
     """Tests for judge prompt construction."""
 
     def test_build_judge_prompt_basic(self) -> None:
-        from tool_eval_bench.runner.judge import _build_judge_prompt
         from tool_eval_bench.domain.scenarios import ScenarioDefinition
+        from tool_eval_bench.runner.judge import _build_judge_prompt
 
         scenario = ScenarioDefinition(
             id="TC-01",
@@ -331,8 +330,8 @@ class TestJudgePromptBuilding:
         assert "No tool calls made" in prompt
 
     def test_build_judge_prompt_with_tool_calls(self) -> None:
-        from tool_eval_bench.runner.judge import _build_judge_prompt
         from tool_eval_bench.domain.scenarios import ScenarioDefinition, ToolResultRecord
+        from tool_eval_bench.runner.judge import _build_judge_prompt
 
         scenario = ScenarioDefinition(
             id="TC-07",
@@ -376,8 +375,8 @@ class TestJudgeVerdicts:
 
     @pytest.mark.asyncio
     async def test_judge_skips_non_fail(self) -> None:
-        from tool_eval_bench.runner.judge import judge_failed_scenarios
         from tool_eval_bench.domain.scenarios import ScenarioDefinition
+        from tool_eval_bench.runner.judge import judge_failed_scenarios
 
         scenario = ScenarioDefinition(
             id="TC-01", title="Test", category=Category.A,
@@ -618,7 +617,7 @@ class TestCategoryORegistration:
             assert tc_id in ALL_DISPLAY_DETAILS, f"Missing display details for {tc_id}"
 
     def test_leaderboard_labels_include_O(self) -> None:
-        from tool_eval_bench.cli.leaderboard import _CAT_LABELS, _CAT_FULL
+        from tool_eval_bench.cli.leaderboard import _CAT_FULL, _CAT_LABELS
         assert "O" in _CAT_LABELS
         assert "O" in _CAT_FULL
         assert _CAT_LABELS["O"] == "Out"
@@ -670,7 +669,9 @@ class TestVersionConsistency:
         # Should be a valid PEP 440 version (X.Y.Z or X.Y.Z.N)
         parts = __version__.split(".")
         assert len(parts) in (3, 4), f"Version should be X.Y.Z or X.Y.Z.N, got {__version__}"
-        assert all(p.isdigit() for p in parts), f"Version parts should be numeric, got {__version__}"
+        assert all(p.isdigit() for p in parts), (
+            f"Version parts should be numeric, got {__version__}"
+        )
 
     def test_pyproject_version_matches(self) -> None:
         import tomllib

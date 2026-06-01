@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 
-
 # ---------------------------------------------------------------------------
 # RunContext dataclass
 # ---------------------------------------------------------------------------
@@ -429,8 +428,9 @@ class TestRepairJsonStr:
 
     def test_unterminated_string(self):
         """Gemma 4 failure case: string cut off mid-value."""
-        from tool_eval_bench.runner.orchestrator import _repair_json_str
         import json
+
+        from tool_eval_bench.runner.orchestrator import _repair_json_str
 
         broken = '{"city": "San Francisco, CA", "date": "2026-04-22", "query": "weather for tom'
         repaired = _repair_json_str(broken)
@@ -439,8 +439,9 @@ class TestRepairJsonStr:
         assert isinstance(parsed, dict)
 
     def test_missing_closing_brace(self):
-        from tool_eval_bench.runner.orchestrator import _repair_json_str
         import json
+
+        from tool_eval_bench.runner.orchestrator import _repair_json_str
 
         broken = '{"city": "London"'
         repaired = _repair_json_str(broken)
@@ -448,8 +449,9 @@ class TestRepairJsonStr:
         assert parsed["city"] == "London"
 
     def test_missing_closing_bracket_and_brace(self):
-        from tool_eval_bench.runner.orchestrator import _repair_json_str
         import json
+
+        from tool_eval_bench.runner.orchestrator import _repair_json_str
 
         broken = '{"tags": ["urgent", "important"'
         repaired = _repair_json_str(broken)
@@ -458,8 +460,9 @@ class TestRepairJsonStr:
 
     def test_deeply_truncated_falls_back(self):
         """Completely unsalvageable JSON should return '{}'."""
-        from tool_eval_bench.runner.orchestrator import _repair_json_str
         import json
+
+        from tool_eval_bench.runner.orchestrator import _repair_json_str
 
         broken = '{"key": "val", "nested": {"inner": ['
         repaired = _repair_json_str(broken)
@@ -469,9 +472,10 @@ class TestRepairJsonStr:
 
     def test_assistant_message_uses_repair(self):
         """Verify _assistant_message sanitizes arguments through repair."""
+        import json
+
         from tool_eval_bench.adapters.base import ChatCompletionResult, ProviderToolCall
         from tool_eval_bench.runner.orchestrator import _assistant_message
-        import json
 
         result = ChatCompletionResult(
             content="",
