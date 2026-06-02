@@ -96,11 +96,13 @@ class IFEvalPlugin(BenchmarkPlugin):
         instructions_passed = 0
         instructions_total = 0
         total_tokens = 0
+        progress_counter = 0
+        progress_lock = asyncio.Lock()
         t_start = time.monotonic()
 
         async def eval_one(idx: int, item: IFEvalItem) -> None:
             nonlocal prompts_passed, instructions_passed, instructions_total
-            nonlocal total_tokens, error_count
+            nonlocal total_tokens, error_count, progress_counter
 
             messages = [
                 {"role": "user", "content": item.prompt},
@@ -167,8 +169,9 @@ class IFEvalPlugin(BenchmarkPlugin):
                 }
 
             if on_progress:
-                completed = sum(1 for r in results if r)
-                await on_progress(completed, total, results[idx])
+                async with progress_lock:
+                    progress_counter += 1
+                    await on_progress(progress_counter, total, results[idx])
 
         tasks = [eval_one(i, item) for i, item in enumerate(all_items)]
         gather_results = await asyncio.gather(*tasks, return_exceptions=True)

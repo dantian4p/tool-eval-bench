@@ -122,10 +122,12 @@ class MMLUPlugin(BenchmarkPlugin):
         correct_count = 0
         error_count = 0
         total_tokens = 0
+        progress_counter = 0
+        progress_lock = asyncio.Lock()
         t_start = time.monotonic()
 
         async def eval_one(idx: int, item: MMLUItem) -> None:
-            nonlocal correct_count, total_tokens, error_count
+            nonlocal correct_count, total_tokens, error_count, progress_counter
             few_shots = dev_by_subject.get(item.subject, [])
             messages = build_messages(item, few_shots, n_shots=n_shots)
 
@@ -184,8 +186,9 @@ class MMLUPlugin(BenchmarkPlugin):
             results[idx] = result_dict
 
             if on_progress:
-                completed = sum(1 for r in results if r)
-                await on_progress(completed, total, results[idx])
+                async with progress_lock:
+                    progress_counter += 1
+                    await on_progress(progress_counter, total, results[idx])
 
         tasks = [eval_one(i, item) for i, item in enumerate(all_items)]
         gather_results = await asyncio.gather(*tasks, return_exceptions=True)
