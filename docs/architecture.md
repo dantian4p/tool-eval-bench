@@ -90,6 +90,17 @@ Registries:
 - `ALL_SCENARIOS` — full 69
 - `ALL_SCENARIOS_WITH_HARDMODE` — full 84
 
+#### Declarative YAML scenarios (pilot)
+
+A small set of scenarios can also be authored as YAML data files under
+`evals/yaml_scenarios/`, loaded by `evals/yaml_loader.py`. This is a
+low-risk pilot for a future "YAML-first" direction — simple scenarios
+(declarative expected tool calls and response rules) can be written without
+Python evaluator functions. The existing 84 Python scenarios are the
+canonical source for now.
+
+### `runner/` — Orchestration
+
 ### `runner/` — Orchestration
 
 | Module | Purpose |
@@ -139,7 +150,13 @@ Shared infrastructure:
 
 | Module | Purpose |
 |---|---|
-| `bench.py` | Main CLI entry point (`tool-eval-bench` command, ~3,600 lines) |
+| `bench.py` | Main CLI entry point (`tool-eval-bench` command). After the 2026 refactor, this is dispatch-only — argument parsing, the `main()` routine, and the plugin benchmark runners. |
+| `commands.py` | Scenario resolution (`resolve_scenarios`, `resolve_all_scenarios_for_ids`) |
+| `helpers.py` | Small CLI helpers: dotenv loading, URL redaction, JSON output, sweep/int parsing, plugin-run persistence, headless errors |
+| `server.py` | Server discovery and backend detection from response headers (`discover_server`, `detect_backend_from_response`) |
+| `perf.py` | Throughput runners: `run_throughput` (built-in), `run_llama_benchy` (external) |
+| `spec_bench.py` | Speculative-decoding / MTP benchmark runner |
+| `pressure.py` | Context-pressure sweep runner |
 | `display.py` | Zero-flicker streaming Rich display for scenario progress |
 | `history.py` | `--history`, `--compare`, `--diff` rendering |
 | `leaderboard.py` | `--leaderboard`, `--export` rendering |

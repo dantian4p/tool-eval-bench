@@ -2,6 +2,54 @@
 
 All notable changes to `tool-eval-bench` are documented here.
 
+## [Unreleased]
+
+### Improved
+
+- **CLI test coverage** — added `tests/test_cli_bench.py` with 44 unit tests
+  covering scenario resolution, backend detection from response headers,
+  sweep-range parsing, argument parsing, JSON output, and plugin-run
+  persistence.
+- **Backend metadata probing tests** — added `tests/test_metadata.py` with 27
+  mocked tests for `/v1/models`, `/version`, `/health`, `/props`, and
+  quantization inference, raising `utils/metadata.py` coverage from ~29% to
+  ~91%.
+- **Failure taxonomy** — added `failure_kind` to `ScenarioEvaluation` and
+  `ScenarioResult`, with runtime-error classification (timeout,
+  connection_error, server_error, model_crash) and heuristic evaluator-failure
+  classification (wrong_tool, wrong_args, missing_step, forbidden_action).
+  Failure kinds are rendered in Markdown reports and round-trip through
+  `to_dict()` / `from_dict()`.
+- **YAML scenario loader pilot** — added `evals/yaml_loader.py` and a sample
+  declarative scenario under `evals/yaml_scenarios/`. Simple scenarios can now
+  be authored as YAML files with expected tool calls and response rules.
+  Added `pyyaml>=6.0` as a core dependency.
+- **CLI refactor (part 1)** — extracted small CLI helpers and server-discovery
+  code from the 4,477-line `cli/bench.py` into new modules:
+  `cli/helpers.py` (dotenv, URL redaction, JSON output, sweep/int parsing,
+  plugin run persistence, headless errors), `cli/commands.py` (scenario
+  resolution), and `cli/server.py` (port discovery, backend detection).
+  `bench.py` now re-exports the old names for backward compatibility and
+  shrank by ~200 lines. Existing tests were updated where the patch path
+  changed.
+- **CLI refactor (part 2)** — extracted throughput, speculative-decoding, and
+  context-pressure runners from `cli/bench.py` into new modules:
+  `cli/perf.py` (`run_throughput`, `run_llama_benchy`),
+  `cli/spec_bench.py` (`run_spec_bench`), and
+  `cli/pressure.py` (`run_pressure_sweep`). Helpers are injected as
+  parameters to avoid circular imports. `bench.py` shrank from 4,285 → 3,352
+  lines (total reduction of 1,125 lines from the original 4,477). Two
+  integration tests in `test_context_pressure.py` were updated to use the new
+  patch paths and helper signatures. Plugin benchmark runners
+  (`_run_gsm8k_benchmark`, `_run_mmlu_benchmark`, `_run_ifeval_benchmark`)
+  remain in `bench.py` for now — they're tightly coupled to the orchestrator
+  and better suited to a dedicated refactor pass.
+- **Backend metadata coverage** — `tests/test_metadata.py` (27 tests) covers
+  the model probing paths with mocked `httpx.AsyncClient` clients. The
+  existing `tests/test_hf_utils.py` already covered the dataset downloader
+  retry, resume, and HuggingFace integration paths. `utils/metadata.py`
+  coverage rises from ~29% to ~91%.
+
 ## [2.0.6] — 2026-06-07
 
 ### Fixed

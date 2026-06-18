@@ -597,6 +597,12 @@ src/tool_eval_bench/
   adapters/           # OpenAI-compatible adapter (vllm, litellm, llamacpp)
   cli/
     bench.py          # Main CLI entry point (tool-eval-bench)
+    commands.py       # Scenario resolution helpers
+    helpers.py        # Small CLI helpers (dotenv, redaction, JSON output, etc.)
+    server.py         # Server discovery and backend detection
+    perf.py           # Throughput runners (built-in + llama-benchy)
+    spec_bench.py     # Speculative-decoding / MTP benchmark runner
+    pressure.py       # Context-pressure sweep runner
     display.py        # Zero-flicker streaming display
     history.py        # --history, --compare, --diff rendering
     leaderboard.py    # --leaderboard, --export rendering
@@ -620,6 +626,8 @@ src/tool_eval_bench/
     scenarios_planning.py   # Planning + creative scenarios (M–N)
     scenarios_structured.py # Structured output scenarios (O)
     scenarios_hardmode.py   # Hard Mode scenarios (P) — opt-in ceiling-breakers
+    yaml_loader.py    # Declarative YAML scenario loader (pilot)
+    yaml_scenarios/   # Sample YAML-defined scenarios
   runner/
     orchestrator.py   # Multi-turn tool-call loop
     service.py        # Benchmark service (orchestration + persistence)
