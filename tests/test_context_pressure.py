@@ -1263,8 +1263,8 @@ class TestPressureSweepIntegration:
             total_tokens=0,
         )
 
-    @patch("tool_eval_bench.cli.bench._resolve_scenarios")
-    @patch("tool_eval_bench.cli.bench.asyncio")
+    @patch("tool_eval_bench.cli.commands.resolve_scenarios")
+    @patch("tool_eval_bench.cli.pressure.asyncio")
     def test_sweep_runs_all_levels(self, mock_asyncio, mock_resolve) -> None:
         """Sweep should call run_all_scenarios for each pressure level."""
         import io
@@ -1294,6 +1294,13 @@ class TestPressureSweepIntegration:
         args = self._make_args(sweep="0.5-1.0", steps=3, context_size=32768)
 
         from tool_eval_bench.cli.bench import _run_pressure_sweep
+        from tool_eval_bench.cli.commands import resolve_scenarios
+        from tool_eval_bench.cli.helpers import (
+            metadata_for_storage,
+            parse_sweep_range,
+            persist_plugin_run,
+            with_config_fingerprint,
+        )
 
         _run_pressure_sweep(
             console,
@@ -1303,13 +1310,18 @@ class TestPressureSweepIntegration:
             "http://localhost:8080",
             None,
             args,
+            parse_sweep_range=parse_sweep_range,
+            resolve_scenarios=resolve_scenarios,
+            with_config_fingerprint=with_config_fingerprint,
+            persist_plugin_run=persist_plugin_run,
+            metadata_for_storage=metadata_for_storage,
         )
 
         # 3 levels (steps=3 → 0.5, 0.75, 1.0) — one asyncio.run per level
         assert mock_asyncio.run.call_count == 3
 
-    @patch("tool_eval_bench.cli.bench._resolve_scenarios")
-    @patch("tool_eval_bench.cli.bench.asyncio")
+    @patch("tool_eval_bench.cli.commands.resolve_scenarios")
+    @patch("tool_eval_bench.cli.pressure.asyncio")
     def test_sweep_early_stops_on_consecutive_failures(
         self,
         mock_asyncio,
@@ -1346,6 +1358,13 @@ class TestPressureSweepIntegration:
         args = self._make_args(sweep="0.5-1.0", steps=4, context_size=32768)
 
         from tool_eval_bench.cli.bench import _run_pressure_sweep
+        from tool_eval_bench.cli.commands import resolve_scenarios
+        from tool_eval_bench.cli.helpers import (
+            metadata_for_storage,
+            parse_sweep_range,
+            persist_plugin_run,
+            with_config_fingerprint,
+        )
 
         _run_pressure_sweep(
             console,
@@ -1355,6 +1374,11 @@ class TestPressureSweepIntegration:
             "http://localhost:8080",
             None,
             args,
+            parse_sweep_range=parse_sweep_range,
+            resolve_scenarios=resolve_scenarios,
+            with_config_fingerprint=with_config_fingerprint,
+            persist_plugin_run=persist_plugin_run,
+            metadata_for_storage=metadata_for_storage,
         )
 
         # Should stop at 3 calls (pass, fail, fail), not run all 4 levels

@@ -474,7 +474,7 @@ class TestServerDiscovery:
     def test_discovers_vllm_on_8000(self, capsys):
         from tool_eval_bench.cli.bench import _discover_server
 
-        with patch("tool_eval_bench.cli.bench.asyncio") as mock_asyncio:
+        with patch("tool_eval_bench.cli.server.asyncio") as mock_asyncio:
             # Inner _probe returns (url, backend, server_name, port)
             mock_asyncio.run.return_value = (
                 "http://localhost:8000",
@@ -500,7 +500,7 @@ class TestServerDiscovery:
     def test_returns_none_when_no_server(self):
         from tool_eval_bench.cli.bench import _discover_server
 
-        with patch("tool_eval_bench.cli.bench.asyncio") as mock_asyncio:
+        with patch("tool_eval_bench.cli.server.asyncio") as mock_asyncio:
             mock_asyncio.run.return_value = None
 
             result = _discover_server(headless=True)
@@ -636,7 +636,9 @@ class TestBackendDetection:
     """Test _detect_backend_from_response."""
 
     def test_detects_vllm_header(self):
-        from tool_eval_bench.cli.bench import _detect_backend_from_response
+        from tool_eval_bench.cli.server import (
+            detect_backend_from_response as _detect_backend_from_response,
+        )
 
         resp = MagicMock()
         resp.headers = {"server": "vllm/0.8.5"}
@@ -645,7 +647,9 @@ class TestBackendDetection:
         assert label == "vLLM"
 
     def test_detects_llamacpp_header(self):
-        from tool_eval_bench.cli.bench import _detect_backend_from_response
+        from tool_eval_bench.cli.server import (
+            detect_backend_from_response as _detect_backend_from_response,
+        )
 
         resp = MagicMock()
         resp.headers = {"server": "llama.cpp/server"}
@@ -654,7 +658,9 @@ class TestBackendDetection:
         assert label == "llama.cpp"
 
     def test_detects_sglang_header(self):
-        from tool_eval_bench.cli.bench import _detect_backend_from_response
+        from tool_eval_bench.cli.server import (
+            detect_backend_from_response as _detect_backend_from_response,
+        )
 
         resp = MagicMock()
         resp.headers = {"server": "sglang/0.4.6"}
@@ -663,7 +669,9 @@ class TestBackendDetection:
         assert label == "SGLang"
 
     def test_falls_back_to_port_hint(self):
-        from tool_eval_bench.cli.bench import _detect_backend_from_response
+        from tool_eval_bench.cli.server import (
+            detect_backend_from_response as _detect_backend_from_response,
+        )
 
         resp = MagicMock()
         resp.headers = {"server": "uvicorn"}  # Generic
@@ -672,7 +680,9 @@ class TestBackendDetection:
         assert label == "LiteLLM"
 
     def test_unknown_port_returns_generic(self):
-        from tool_eval_bench.cli.bench import _detect_backend_from_response
+        from tool_eval_bench.cli.server import (
+            detect_backend_from_response as _detect_backend_from_response,
+        )
 
         resp = MagicMock()
         resp.headers = {}
