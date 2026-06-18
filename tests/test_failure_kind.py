@@ -80,7 +80,9 @@ class TestClassifyRuntimeError:
     def test_connection_error(self) -> None:
         from tool_eval_bench.runner.orchestrator import _classify_runtime_error
 
-        assert _classify_runtime_error(httpx.ConnectError("refused")) == FailureKind.CONNECTION_ERROR
+        assert (
+            _classify_runtime_error(httpx.ConnectError("refused")) == FailureKind.CONNECTION_ERROR
+        )
 
     def test_server_error(self) -> None:
         from tool_eval_bench.runner.orchestrator import _classify_runtime_error
@@ -112,9 +114,7 @@ class TestClassifyEvaluationFailure:
         from tool_eval_bench.runner.orchestrator import _classify_evaluation_failure
 
         state = ScenarioState()
-        evaluation = ScenarioEvaluation(
-            status=ScenarioStatus.PASS, points=2, summary="ok"
-        )
+        evaluation = ScenarioEvaluation(status=ScenarioStatus.PASS, points=2, summary="ok")
         assert _classify_evaluation_failure(state, evaluation) is None
 
     def test_evaluator_failure_kind_takes_precedence(self) -> None:
@@ -133,9 +133,7 @@ class TestClassifyEvaluationFailure:
         from tool_eval_bench.runner.orchestrator import _classify_evaluation_failure
 
         state = ScenarioState()
-        evaluation = ScenarioEvaluation(
-            status=ScenarioStatus.FAIL, points=0, summary="did nothing"
-        )
+        evaluation = ScenarioEvaluation(status=ScenarioStatus.FAIL, points=0, summary="did nothing")
         assert _classify_evaluation_failure(state, evaluation) == FailureKind.MISSING_STEP
 
     def test_forbidden_summary(self) -> None:

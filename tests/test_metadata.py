@@ -15,7 +15,9 @@ import pytest
 # ---------------------------------------------------------------------------
 
 
-def _mock_response(status_code: int = 200, json_data: Any | None = None, headers: dict | None = None) -> MagicMock:
+def _mock_response(
+    status_code: int = 200, json_data: Any | None = None, headers: dict | None = None
+) -> MagicMock:
     """Build a mock httpx Response."""
     resp = MagicMock()
     resp.status_code = status_code
