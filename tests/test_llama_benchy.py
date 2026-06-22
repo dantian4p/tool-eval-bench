@@ -180,6 +180,8 @@ class TestBuildCommand:
         assert "--no-cache" in cmd
         # coherence check is enabled by default (skip-coherence NOT in cmd)
         assert "--skip-coherence" not in cmd
+        # adapt-prompt is always disabled (tool-eval-bench does its own calibration)
+        assert "--no-adapt-prompt" in cmd
 
     def test_api_key_not_on_command_line(self, monkeypatch):
         """API key must NOT appear on the command line (security: visible in ps aux).
@@ -850,6 +852,159 @@ class TestRunLlamaBenchy:
         assert captured_env.get("PYTHONUNBUFFERED") == "1"
         assert captured_env.get("TRANSFORMERS_NO_ADVISORY_WARNINGS") == "1"
         assert captured_env.get("HF_HUB_DISABLE_IMPLICIT_TOKEN") == "1"
+
+    async def test_oom_detected_sigkill(self, monkeypatch):
+        """SIGKILL (-9) should be detected as OOM with a clear message."""
+        from tool_eval_bench.runner.llama_benchy import run_llama_benchy
+
+        monkeypatch.setattr(
+            "tool_eval_bench.runner.llama_benchy.shutil.which",
+            lambda name: "/usr/bin/llama-benchy" if name == "llama-benchy" else None,
+        )
+
+        class MockStdout:
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                raise StopAsyncIteration
+
+        class MockProcess:
+            stdout = MockStdout()
+
+            async def wait(self):
+                return -9  # SIGKILL
+
+        async def mock_create(*args, **kwargs):
+            return MockProcess()
+
+        monkeypatch.setattr(
+            "tool_eval_bench.runner.llama_benchy.asyncio.create_subprocess_exec",
+            mock_create,
+        )
+
+        with pytest.raises(RuntimeError, match="out of memory"):
+            await run_llama_benchy("http://localhost:8888/v1", "test-model")
+
+    async def test_oom_detected_exit_137(self, monkeypatch):
+        """Exit code 137 (128 + SIGKILL) should also be detected as OOM."""
+        from tool_eval_bench.runner.llama_benchy import run_llama_benchy
+
+        monkeypatch.setattr(
+            "tool_eval_bench.runner.llama_benchy.shutil.which",
+            lambda name: "/usr/bin/llama-benchy" if name == "llama-benchy" else None,
+        )
+
+        class MockStdout:
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                raise StopAsyncIteration
+
+        class MockProcess:
+            stdout = MockStdout()
+
+            async def wait(self):
+                return 137  # 128 + SIGKILL
+
+        async def mock_create(*args, **kwargs):
+            return MockProcess()
+
+        monkeypatch.setattr(
+            "tool_eval_bench.runner.llama_benchy.asyncio.create_subprocess_exec",
+            mock_create,
+        )
+
+        with pytest.raises(RuntimeError, match="out of memory"):
+            await run_llama_benchy("http://localhost:8888/v1", "test-model")
+
+    async def test_oom_detected_memory_error_in_output(self, monkeypatch):
+        """MemoryError in subprocess output should be detected as OOM."""
+        from tool_eval_bench.runner.llama_benchy import run_llama_benchy
+
+        monkeypatch.setattr(
+            "tool_eval_bench.runner.llama_benchy.shutil.which",
+            lambda name: "/usr/bin/llama-benchy" if name == "llama-benchy" else None,
+        )
+
+        class MockStdout:
+            def __init__(self):
+                self._lines = [
+                    b"Traceback (most recent call last):\n",
+                    b"MemoryError\n",
+                ]
+                self._idx = 0
+
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                if self._idx >= len(self._lines):
+                    raise StopAsyncIteration
+                line = self._lines[self._idx]
+                self._idx += 1
+                return line
+
+        class MockProcess:
+            def __init__(self):
+                self.stdout = MockStdout()
+
+            async def wait(self):
+                return 1  # generic failure
+
+        async def mock_create(*args, **kwargs):
+            return MockProcess()
+
+        monkeypatch.setattr(
+            "tool_eval_bench.runner.llama_benchy.asyncio.create_subprocess_exec",
+            mock_create,
+        )
+
+        with pytest.raises(RuntimeError, match="out of memory"):
+            await run_llama_benchy("http://localhost:8888/v1", "test-model")
+
+    async def test_non_oom_exit_preserves_original_error(self, monkeypatch):
+        """Non-OOM failures should still report the exit code and output."""
+        from tool_eval_bench.runner.llama_benchy import run_llama_benchy
+
+        monkeypatch.setattr(
+            "tool_eval_bench.runner.llama_benchy.shutil.which",
+            lambda name: "/usr/bin/llama-benchy" if name == "llama-benchy" else None,
+        )
+
+        class MockStdout:
+            def __init__(self):
+                self._lines = [b"Some error occurred\n"]
+                self._idx = 0
+
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                if self._idx >= len(self._lines):
+                    raise StopAsyncIteration
+                line = self._lines[self._idx]
+                self._idx += 1
+                return line
+
+        class MockProcess:
+            def __init__(self):
+                self.stdout = MockStdout()
+
+            async def wait(self):
+                return 2
+
+        async def mock_create(*args, **kwargs):
+            return MockProcess()
+
+        monkeypatch.setattr(
+            "tool_eval_bench.runner.llama_benchy.asyncio.create_subprocess_exec",
+            mock_create,
+        )
+
+        with pytest.raises(RuntimeError, match="exited with code 2"):
+            await run_llama_benchy("http://localhost:8888/v1", "test-model")
 
 
 # ---------------------------------------------------------------------------

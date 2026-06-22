@@ -150,6 +150,12 @@ def _build_command(
     if skip_warmup:
         cmd.append("--no-warmup")
 
+    # Always disable adapt-prompt: tool-eval-bench has its own tokenizer
+    # calibration, and llama-benchy's adapt-prompt forces extra warmup probes
+    # that add latency without benefit.  Also reduces the tokenizer's role
+    # to prompt construction only, where the gpt2 fallback is acceptable.
+    cmd.append("--no-adapt-prompt")
+
     # JSON output
     cmd.extend(["--format", "json"])
     if output_file:
@@ -355,6 +361,25 @@ async def run_llama_benchy(
         returncode = await proc.wait()
 
         if returncode != 0:
+            # Detect OOM kill (Linux SIGKILL = signal 9 → exit code -9 or 137)
+            _OOM_MARKERS = (
+                "MemoryError",
+                "Killed",
+                "out of memory",
+                "Cannot allocate memory",
+            )
+            tail = output_lines[-30:] if output_lines else []
+            is_oom = returncode in (-9, 137) or any(
+                marker in line for line in tail for marker in _OOM_MARKERS
+            )
+            if is_oom:
+                raise RuntimeError(
+                    "llama-benchy was killed — likely out of memory (OOM).\n"
+                    "This can happen when the HuggingFace transformers library "
+                    "loads tokenizer data for large models, consuming excessive "
+                    "RAM in the subprocess.\n"
+                    "See: https://github.com/eugr/llama-benchy/issues/XX"
+                )
             output_text = "\n".join(output_lines[-20:])  # last 20 lines
             raise RuntimeError(f"llama-benchy exited with code {returncode}:\n{output_text}")
 
