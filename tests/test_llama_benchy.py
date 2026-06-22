@@ -1006,6 +1006,50 @@ class TestRunLlamaBenchy:
         with pytest.raises(RuntimeError, match="exited with code 2"):
             await run_llama_benchy("http://localhost:8888/v1", "test-model")
 
+    async def test_oom_detected_cannot_allocate(self, monkeypatch):
+        """'Cannot allocate memory' in output should be detected as OOM."""
+        from tool_eval_bench.runner.llama_benchy import run_llama_benchy
+
+        monkeypatch.setattr(
+            "tool_eval_bench.runner.llama_benchy.shutil.which",
+            lambda name: "/usr/bin/llama-benchy" if name == "llama-benchy" else None,
+        )
+
+        class MockStdout:
+            def __init__(self):
+                self._lines = [
+                    b"OSError: [Errno 12] Cannot allocate memory\n",
+                ]
+                self._idx = 0
+
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                if self._idx >= len(self._lines):
+                    raise StopAsyncIteration
+                line = self._lines[self._idx]
+                self._idx += 1
+                return line
+
+        class MockProcess:
+            def __init__(self):
+                self.stdout = MockStdout()
+
+            async def wait(self):
+                return 1
+
+        async def mock_create(*args, **kwargs):
+            return MockProcess()
+
+        monkeypatch.setattr(
+            "tool_eval_bench.runner.llama_benchy.asyncio.create_subprocess_exec",
+            mock_create,
+        )
+
+        with pytest.raises(RuntimeError, match="out of memory"):
+            await run_llama_benchy("http://localhost:8888/v1", "test-model")
+
 
 # ---------------------------------------------------------------------------
 # Display logic tests: Weakest category

@@ -595,6 +595,15 @@ class TestShortenModelName:
         path = "/cache/models--OrgOnly/snapshot"
         assert _shorten_model_name(path) == "OrgOnly"
 
+    def test_windows_backslash_hf_cache(self) -> None:
+        """Windows-style backslash path with models-- pattern."""
+        path = r"C:\Users\user\.cache\huggingface\hub\models--Org--Model\snapshots\abc"
+        assert _shorten_model_name(path) == "Org/Model"
+
+    def test_relative_path_unchanged(self) -> None:
+        """Relative path without leading / should pass through unchanged."""
+        assert _shorten_model_name("local/model-name") == "local/model-name"
+
 
 class TestLeaderboardLongModelNames:
     """Integration test: long model names should appear shortened (#15)."""
