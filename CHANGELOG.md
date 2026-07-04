@@ -4,6 +4,14 @@ All notable changes to `tool-eval-bench` are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **`compare-report` CLI subcommand** — generate a browser HTML comparison
+  from two existing Markdown benchmark reports:
+  `tool-eval-bench compare-report a_summary.md b_summary.md -o comparison.html`.
+  The command auto-detects single-run vs cross-trial summary reports from the
+  Markdown heading and uses the packaged comparison report generators.
+
 ### Fixed
 
 - **Pre-flight model availability check (#19)** — when a server lists a model

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from compare.compare_summary import generate_html as generate_summary_html
-from compare.compare_tool_eval import generate_html as generate_tool_eval_html
+from tool_eval_bench.cli.compare_report import detect_report_kind, generate_compare_report
+from tool_eval_bench.compare_reports.summary import generate_html as generate_summary_html
+from tool_eval_bench.compare_reports.tool_eval import generate_html as generate_tool_eval_html
 
 
 def _tool_eval_run(**overrides):
@@ -68,6 +69,30 @@ def _summary_run(**overrides):
 
 def _html(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def test_detect_report_kind_from_markdown_heading(tmp_path: Path) -> None:
+    summary = tmp_path / "summary.md"
+    summary.write_text("# Cross-Trial Summary — Model\n\n", encoding="utf-8")
+    single = tmp_path / "single.md"
+    single.write_text("# Tool-Call Benchmark — Model\n\n", encoding="utf-8")
+
+    assert detect_report_kind(str(summary)) == "summary"
+    assert detect_report_kind(str(single)) == "tool-eval"
+
+
+def test_generate_compare_report_rejects_mixed_report_types(tmp_path: Path) -> None:
+    summary = tmp_path / "summary.md"
+    summary.write_text("# Cross-Trial Summary — Model\n\n", encoding="utf-8")
+    single = tmp_path / "single.md"
+    single.write_text("# Tool-Call Benchmark — Model\n\n", encoding="utf-8")
+
+    try:
+        generate_compare_report(str(summary), str(single), str(tmp_path / "out.html"))
+    except ValueError as exc:
+        assert "Report types do not match" in str(exc)
+    else:
+        raise AssertionError("expected mixed report types to fail")
 
 
 def test_tool_eval_median_turn_stays_with_model_columns(tmp_path: Path) -> None:

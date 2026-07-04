@@ -1,8 +1,8 @@
 # Tool-Eval Comparison Helpers
 
-Small standalone scripts for turning two `tool-eval-bench` Markdown reports into a browser-friendly head-to-head HTML comparison.
+Small helpers for turning two `tool-eval-bench` Markdown reports into a browser-friendly head-to-head HTML comparison.
 
-This directory is not part of the main `tool-eval-bench` CLI. It is a local reporting utility for publishing or reviewing model-vs-model results after benchmark runs have already completed.
+The preferred interface is the main `tool-eval-bench compare-report` CLI subcommand. The scripts in this directory remain as compatibility wrappers for publishing or reviewing model-vs-model results after benchmark runs have already completed.
 
 ## Files
 
@@ -32,7 +32,16 @@ The summary comparer is the better default for serious comparisons because it in
 
 ## Usage
 
-Run from this directory with the project virtualenv Python:
+Use the main CLI for either single-run reports or cross-trial summary reports. The report type is auto-detected from the Markdown heading:
+
+```bash
+tool-eval-bench compare-report \
+  path/to/model_a_summary.md \
+  path/to/model_b_summary.md \
+  -o model_a_vs_model_b.html
+```
+
+The compatibility wrapper scripts can still be run from this directory with the project virtualenv Python:
 
 ```bash
 ../.venv/bin/python compare_summary.py \
@@ -117,6 +126,15 @@ git/
 Regenerate that style of report with:
 
 ```bash
+tool-eval-bench compare-report \
+  git/Agents-A1-Q8_0_summary.md \
+  git/Qwen3.6-35B-A3B-UD-Q8_K_XL_summary.md \
+  -o git/Agents-A1_vs_Qwen3.6-35B-A3B-UD-Q8_K_XL.html
+```
+
+Or with the compatibility wrapper:
+
+```bash
 ../.venv/bin/python compare_summary.py \
   git/Agents-A1-Q8_0_summary.md \
   git/Qwen3.6-35B-A3B-UD-Q8_K_XL_summary.md \
@@ -130,4 +148,3 @@ Regenerate that style of report with:
 - The HTML depends on external CDNs for styling and icons.
 - The scripts do not query SQLite or run benchmarks; they only compare existing Markdown artifacts.
 - Winner selection is score-based only. Human judgment is still needed for deployment decisions, especially when safety warnings or infrastructure failures are present.
-

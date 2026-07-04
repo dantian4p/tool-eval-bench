@@ -32,6 +32,9 @@ from tool_eval_bench.cli.commands import (
 from tool_eval_bench.cli.commands import (
     resolve_scenarios as _resolve_scenarios,
 )
+from tool_eval_bench.cli.compare_report import (
+    run_compare_report_command as _run_compare_report_command,
+)
 from tool_eval_bench.cli.display import BenchmarkDisplay
 from tool_eval_bench.cli.helpers import (
     emit_headless_error as _headless_error,
@@ -1995,12 +1998,36 @@ def _make_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--experimental-async", action="store_true", help=argparse.SUPPRESS)
 
+    # -- Subcommands -------------------------------------------------------
+    subparsers = parser.add_subparsers(dest="command")
+    compare_report = subparsers.add_parser(
+        "compare-report",
+        help="Generate a browser HTML comparison report from two Markdown reports",
+        description="Generate a browser HTML comparison report from two Markdown reports.",
+    )
+    compare_report.add_argument("report_a", help="First Markdown report")
+    compare_report.add_argument("report_b", help="Second Markdown report")
+    compare_report.add_argument(
+        "-o",
+        "--output",
+        required=True,
+        help="Output HTML path",
+    )
+    compare_report.add_argument(
+        "--kind",
+        choices=["auto", "summary", "tool-eval"],
+        default="auto",
+        help="Report type to compare (default: auto-detect from headings)",
+    )
+
     return parser
 
 
 # Set of argument dest names that are intentionally suppressed (not in ARGS_SCHEMA).
 # Used by the drift-detection test in tests/test_api.py.
-_HIDDEN_ARGS: frozenset[str] = frozenset({"llm_judge", "judge_model", "experimental_async", "help"})
+_HIDDEN_ARGS: frozenset[str] = frozenset(
+    {"llm_judge", "judge_model", "experimental_async", "command", "help"}
+)
 
 
 def main() -> None:
@@ -2008,11 +2035,15 @@ def main() -> None:
     parser = _make_parser()
     args = parser.parse_args()
 
+    console = Console()
+
+    if getattr(args, "command", None) == "compare-report":
+        _run_compare_report_command(args, console)
+        return
+
     # --json-file implies --json
     if args.json_file:
         args.json = True
-
-    console = Console()
 
     # --history: show recent runs and exit
     if args.history:
