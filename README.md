@@ -217,6 +217,8 @@ tool-eval-bench --model gemma4 --backend vllm --base-url http://localhost:8080
 --output-dir DIR       Directory for report files (default: ./runs/)
 --diff RUN_ID          Compare results against a previous run (use 'latest')
 --compare A B          Diff two stored runs by ID
+compare-report A B -o OUT.html
+                       Generate a browser HTML comparison from two Markdown reports
 --history              List recent benchmark runs
 --leaderboard          Show ranked model leaderboard
 --export FORMAT        Export all results as csv or json
@@ -689,6 +691,8 @@ tool-eval-bench --model gpt-4o --base-url http://litellm:4000
 tool-eval-bench --model claude-3.5-sonnet --base-url http://litellm:4000
 # Compare the two runs
 tool-eval-bench --compare <run_id_a> <run_id_b>
+# Generate a browser report from two Markdown artifacts
+tool-eval-bench compare-report runs/.../model_a_summary.md runs/.../model_b_summary.md -o comparison.html
 ```
 
 > **Tip:** Set `TOOL_EVAL_BACKEND=litellm` in `.env` so reports are labeled correctly.

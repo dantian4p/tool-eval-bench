@@ -386,6 +386,17 @@ class TestMakeParser:
         args = parser.parse_args(["--backend-kwargs", raw])
         assert args.backend_kwargs == raw
 
+    def test_compare_report_subcommand(self) -> None:
+        from tool_eval_bench.cli.bench import _make_parser
+
+        parser = _make_parser()
+        args = parser.parse_args(["compare-report", "a.md", "b.md", "-o", "out.html"])
+        assert args.command == "compare-report"
+        assert args.report_a == "a.md"
+        assert args.report_b == "b.md"
+        assert args.output == "out.html"
+        assert args.kind == "auto"
+
 
 # ---------------------------------------------------------------------------
 # _emit_json_output
