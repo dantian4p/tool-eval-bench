@@ -12,7 +12,9 @@ Rendering helpers (gauge bars, sparklines, etc.) live in the shared
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
+import os
 import signal
 import time
 from collections import deque
@@ -578,16 +580,50 @@ async def run_spec_live(
     _sticky_prefix_cache_pct: float = 0.0
 
     stop_event = asyncio.Event()
+    signal_count = 0
+    received_hup = False
 
-    def _handle_signal() -> None:
+    poll_task: asyncio.Task[MetricsSnapshot | None] | None = None
+    tty_restore = None
+
+    def _restore_terminal_for_exit() -> None:
+        if tty_restore is not None:
+            try:
+                tty_restore()
+            except Exception:
+                logger.debug("Failed to restore terminal settings before force exit")
+        try:
+            sys.stdout.write("\033[?1049l")  # rmcup — leave alt screen
+            sys.stdout.flush()
+        except Exception:  # noqa: S110
+            # Last-resort cleanup before os._exit: a closed/dead stdout can
+            # raise ValueError or OSError — never block the force exit.
+            pass
+
+    def _handle_signal(sig: signal.Signals) -> None:
+        nonlocal received_hup, signal_count
+        if hasattr(signal, "SIGHUP") and sig == signal.SIGHUP:
+            received_hup = True
+        signal_count += 1
+        if signal_count >= 2:
+            # Restore the screen FIRST so the warning is visible on the real
+            # terminal, then log, then bail out unconditionally.
+            _restore_terminal_for_exit()
+            logger.warning("Second termination signal received — forcing exit")
+            os._exit(130)
         stop_event.set()
+        if poll_task is not None:
+            poll_task.cancel()
 
     loop = asyncio.get_event_loop()
-    for sig in (signal.SIGINT, signal.SIGTERM):
+    signals = (signal.SIGINT, signal.SIGTERM)
+    if hasattr(signal, "SIGHUP"):
+        signals = (*signals, signal.SIGHUP)
+    for sig in signals:
         try:
-            loop.add_signal_handler(sig, _handle_signal)
+            loop.add_signal_handler(sig, _handle_signal, sig)
         except NotImplementedError:
-            pass  # Windows
+            pass  # Windows — fall back to default handler
 
     # ── Enter alternate screen buffer ──
     # This gives us a clean, full-terminal canvas (like htop/vim).
@@ -620,7 +656,15 @@ async def run_spec_live(
                 screen=False,  # we manage the screen ourselves
             ) as live:
                 while not stop_event.is_set():
-                    snap = await scrape_snapshot(client, url, api_key)
+                    poll_task = asyncio.create_task(scrape_snapshot(client, url, api_key))
+                    try:
+                        snap = await poll_task
+                    except asyncio.CancelledError:
+                        if stop_event.is_set():
+                            break
+                        raise
+                    finally:
+                        poll_task = None
                     poll_count += 1
 
                     if snap is not None and (snap.has_spec_decode or snap.has_llamacpp_metrics):
@@ -728,6 +772,8 @@ async def run_spec_live(
 
                     async def _check_stdin() -> None:
                         """Check stdin for Ctrl+R (\x12) keypresses."""
+                        nonlocal tty_restore
+
                         try:
                             import termios  # noqa: F811
                             import tty  # noqa: F811
@@ -740,8 +786,13 @@ async def run_spec_live(
                             old = termios.tcgetattr(fd)
                         except termios.error:
                             return
+
+                        def _restore_tty() -> None:
+                            termios.tcsetattr(fd, termios.TCSADRAIN, old)
+
                         try:
                             tty.setcbreak(fd)  # cbreak: signals still work
+                            tty_restore = _restore_tty
                             _loop = asyncio.get_event_loop()
                             fut: asyncio.Future[None] = _loop.create_future()
 
@@ -753,20 +804,32 @@ async def run_spec_live(
                                     fut.set_result(None)
 
                             _loop.add_reader(fd, _readable)
+                            # Create the wait tasks only AFTER add_reader succeeds;
+                            # otherwise a failing add_reader would orphan them.
+                            stop_task = _loop.create_task(stop_event.wait())
+                            timeout_task = _loop.create_task(asyncio.sleep(poll_interval))
                             try:
-                                await asyncio.wait_for(fut, timeout=poll_interval)
-                            except asyncio.TimeoutError:
-                                pass
+                                await asyncio.wait(
+                                    {fut, stop_task, timeout_task},
+                                    return_when=asyncio.FIRST_COMPLETED,
+                                )
                             finally:
+                                stop_task.cancel()
+                                timeout_task.cancel()
+                                with contextlib.suppress(asyncio.CancelledError):
+                                    await stop_task
+                                with contextlib.suppress(asyncio.CancelledError):
+                                    await timeout_task
                                 try:
                                     _loop.remove_reader(fd)
                                 except Exception:
                                     logger.debug("Failed to remove stdin reader")
                         finally:
                             try:
-                                termios.tcsetattr(fd, termios.TCSADRAIN, old)
+                                _restore_tty()
                             except Exception:
                                 logger.debug("Failed to restore terminal settings")
+                            tty_restore = None
 
                     # Run stdin check with poll timeout
                     try:
@@ -798,11 +861,28 @@ async def run_spec_live(
                         _sticky_gpu_cache_pct = 0.0
                         _sticky_prefix_cache_pct = 0.0
                         reset_flash_remaining = 3  # show banner for 3 poll cycles
+    except OSError:
+        # On SIGHUP the controlling terminal (PTY) is already gone, so Rich's
+        # final ``Live`` refresh writes to a dead fd and raises.  Suppress it
+        # ONLY on that path — never mask a real I/O error in normal operation.
+        if not received_hup:
+            raise
 
     finally:
         # ── Leave alternate screen buffer ──
-        sys.stdout.write("\033[?1049l")  # rmcup — leave alt screen
-        sys.stdout.flush()
+        try:
+            sys.stdout.write("\033[?1049l")  # rmcup — leave alt screen
+            sys.stdout.flush()
+        except OSError:
+            pass
+        for sig in signals:
+            try:
+                loop.remove_signal_handler(sig)
+            except (NotImplementedError, RuntimeError, ValueError):
+                pass
+
+    if received_hup:
+        return
 
     # Print session summary to the restored normal terminal
     console = Console()
