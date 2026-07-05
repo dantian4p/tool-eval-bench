@@ -27,6 +27,9 @@ from tool_eval_bench.domain.scenarios import (
 # Helpers (shared via evals.helpers)
 # ---------------------------------------------------------------------------
 from tool_eval_bench.evals.helpers import (
+    answer_contains_number as _answer_contains_number,
+)
+from tool_eval_bench.evals.helpers import (
     as_str as _as_str,
 )
 from tool_eval_bench.evals.helpers import (
@@ -406,7 +409,16 @@ def _tc27_eval(state: ScenarioState) -> ScenarioEvaluation:
         ]
         has_both = "celsius" in units_used and "fahrenheit" in units_used
         if has_both:
-            return _pass("Made exactly 2 calls with different units.")
+            # Verify the model actually surfaced the temperature values
+            has_celsius = _answer_contains_number(state.final_answer, "10")
+            has_fahrenheit = _answer_contains_number(state.final_answer, "50")
+            if has_celsius and has_fahrenheit:
+                return _pass("Made exactly 2 calls with different units.")
+            return _partial(
+                "Called get_weather correctly with both units but did not surface "
+                "the actual temperatures in the answer.",
+                "Answer should include 10 (Celsius) and 50 (Fahrenheit).",
+            )
         return _partial("Made 2 calls but didn't distinguish units correctly.")
 
     if len(weather_calls) == 1:

@@ -790,7 +790,8 @@ class TestTC27:
             tool_calls=[
                 {"name": "get_weather", "arguments": {"location": "London", "units": "celsius"}},
                 {"name": "get_weather", "arguments": {"location": "London", "units": "fahrenheit"}},
-            ]
+            ],
+            final_answer="London: 10°C / 50°F, Rainy.",
         )
         assert self.sc.evaluate(s).status == ScenarioStatus.PASS
 

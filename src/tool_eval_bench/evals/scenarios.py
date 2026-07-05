@@ -465,8 +465,19 @@ def _tc09_eval(state: ScenarioState) -> ScenarioEvaluation:
         c.name == "get_stock_price" for c in first_batch
     )
     if weather and stock:
-        note = "Both tools were called in the same assistant turn." if parallel else None
-        return _pass("Handled both independent tasks.", note)
+        # Verify the model actually surfaced the tool result values.
+        # Use digit-boundary match for temperature (12) to avoid false
+        # positives from the stock price (412.78) which contains "12".
+        # (?<!\d)12(?!\d) matches "12C", "12°C", "12 degrees" but not "412".
+        has_temp = bool(re.search(r"(?<!\d)12(?!\d)", state.final_answer))
+        has_price = _answer_contains_number(state.final_answer, "412")
+        if has_temp and has_price:
+            note = "Both tools were called in the same assistant turn." if parallel else None
+            return _pass("Handled both independent tasks.", note)
+        return _partial(
+            "Called the right tools but did not surface the actual results in the answer.",
+            "Answer should include the temperature (12) and stock price (412.78).",
+        )
     if _has_tool_call(state, "web_search"):
         return _partial("Covered the request, but fell back to web_search.")
     return _fail("Missed one side of the two-part request.")
