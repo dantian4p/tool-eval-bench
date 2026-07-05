@@ -23,6 +23,9 @@ from tool_eval_bench.domain.scenarios import (
 # Helpers (shared via evals.helpers)
 # ---------------------------------------------------------------------------
 from tool_eval_bench.evals.helpers import (
+    answer_contains_number as _answer_contains_number,
+)
+from tool_eval_bench.evals.helpers import (
     as_str as _as_str,
 )
 from tool_eval_bench.evals.helpers import (
@@ -97,7 +100,7 @@ def _tc16_eval(state: ScenarioState) -> ScenarioEvaluation:
     # Two paths: weather-specific vocabulary (when tool succeeds) or
     # generic German (when tool returns an error and model reports failure).
     answer_lower = state.final_answer.lower()
-    weather_german = ["wetter", "grad", "bewölkt", "celsius", "münchen", "temperatur", "°c", "14"]
+    weather_german = ["wetter", "grad", "bewölkt", "celsius", "münchen", "temperatur", "°c"]
     generic_german = [
         "tut mir leid",
         "bitte",
@@ -113,9 +116,18 @@ def _tc16_eval(state: ScenarioState) -> ScenarioEvaluation:
     weather_score = sum(1 for w in weather_german if w in answer_lower)
     generic_score = sum(1 for w in generic_german if w in answer_lower)
     answer_in_german = weather_score >= 3 or generic_score >= 2
+    # Check the model surfaced actual weather data (temp 14 or condition).
+    has_data = _answer_contains_number(state.final_answer, "14") or "bewölkt" in answer_lower
+    # When the model uses generic_german tokens (error handling path),
+    # data was never received — don't require it for pass.
+    answered_about_error = generic_score >= 2
 
-    if used_weather and answer_in_german:
+    if used_weather and answer_in_german and (has_data or answered_about_error):
         return _pass("Used get_weather for München and responded in German.")
+    if used_weather and answer_in_german and not has_data:
+        return _partial(
+            "Used get_weather and responded in German but did not surface the temperature."
+        )
     if used_weather and not answer_in_german:
         return _partial("Found the weather correctly but responded in English instead of German.")
     if not used_weather and answer_in_german:

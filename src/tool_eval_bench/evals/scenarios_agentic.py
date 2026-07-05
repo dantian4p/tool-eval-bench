@@ -1864,8 +1864,13 @@ def _tc45_eval(state: ScenarioState) -> ScenarioEvaluation:
         expr = _as_str(calc_calls[0].arguments.get("expression", ""))
         result = _parse_math_expression(expr)
         if result is not None and abs(result - 56) < 0.01:
-            return _pass(
-                "Used calculator with correct expression — honored tool_choice='required'."
+            # Verify the model surfaced the computed result.
+            if _answer_contains_number(state.final_answer, "56"):
+                return _pass(
+                    "Used calculator with correct expression — honored tool_choice='required'."
+                )
+            return _partial(
+                "Used calculator correctly but did not surface the result (56) in the answer.",
             )
         return _partial("Used calculator but expression didn't evaluate to 56.")
     return _partial(

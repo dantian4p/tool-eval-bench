@@ -193,10 +193,10 @@ def _tc52_eval(state: ScenarioState) -> ScenarioEvaluation:
         ),
     )
     answer = state.final_answer.lower()
-    mentions_comparison = any(
-        w in answer
-        for w in ("178", "aapl", "s&p", "market", "compare", "outperform", "underperform")
-    )
+    # Require actual data (AAPL price 178) plus comparison context.
+    has_price = _answer_contains_number(state.final_answer, "178")
+    has_benchmark = any(w in answer for w in ("5412", "5,412", "17234", "17,234", "s&p", "nasdaq"))
+    mentions_comparison = has_price and has_benchmark
 
     if got_stock and searched_market and mentions_comparison:
         return _pass("Autonomously researched market + stock and synthesized comparison.")
@@ -568,7 +568,6 @@ def _tc61_eval(state: ScenarioState) -> ScenarioEvaluation:
         _answer_contains_number(answer, "15420")
         or _answer_contains_number(answer, "15,420")
         or "3 anomal" in answer
-        or "anomalies" in answer
     )
 
     if len(run_calls) >= 2 and has_result:
