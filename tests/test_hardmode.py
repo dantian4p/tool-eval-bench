@@ -93,6 +93,7 @@ class TestTC70AdversarialTools:
         call = _make_call("get_weather_global", {"location": "Tokyo"})
         sc.handle_tool_call(state, call)
         state.tool_calls.append(call)
+        state.final_answer = "Tokyo is currently 22°C and Sunny."
         result = sc.evaluate(state)
         assert result.status == ScenarioStatus.PASS
 

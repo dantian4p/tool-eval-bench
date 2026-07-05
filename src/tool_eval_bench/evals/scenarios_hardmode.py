@@ -17,6 +17,7 @@ Category: P (Hard Mode)
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from tool_eval_bench.domain.scenarios import (
@@ -142,7 +143,16 @@ def _tc70_eval(state: ScenarioState) -> ScenarioEvaluation:
         and euro_calls[0].turn < global_calls[0].turn
     )
     if used_global and not used_euro:
-        return _pass("Selected get_weather_global directly — read the tool descriptions carefully.")
+        # Verify the model surfaced actual weather data (temp 22 or condition).
+        has_temp = bool(re.search(r"(?<!\d)22(?!\d)", state.final_answer))
+        has_condition = "sunny" in state.final_answer.lower()
+        if has_temp or has_condition:
+            return _pass(
+                "Selected get_weather_global directly — read the tool descriptions carefully."
+            )
+        return _partial(
+            "Selected the correct tool but did not surface the weather data in the answer.",
+        )
     if recovered:
         return _partial("Tried the wrong tool first but recovered after the error.")
     if used_euro and not used_global:

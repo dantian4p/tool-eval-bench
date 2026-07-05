@@ -359,7 +359,9 @@ def _tc40_eval(state: ScenarioState) -> ScenarioEvaluation:
     if used_order and total_calls == 1 and mentions_status:
         return _pass("Selected get_order_status precisely from similar-named tools.")
     if used_order and total_calls == 1:
-        return _pass("Used get_order_status correctly — answered from 52 tools.")
+        return _partial(
+            "Used get_order_status correctly but did not surface the order details in the answer.",
+        )
     if used_order and used_customer and total_calls == 2:
         return _partial(
             "Used get_order_status + get_customer_profile — "

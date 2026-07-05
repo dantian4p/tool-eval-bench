@@ -96,7 +96,14 @@ def _tc22_eval(state: ScenarioState) -> ScenarioEvaluation:
         parsed = json.loads(answer)
         has_keys = all(k in parsed for k in ("temp", "condition", "humidity"))
         if has_keys:
-            return _pass("Called get_weather and returned properly formatted JSON.")
+            # Verify the values actually come from the tool result.
+            correct_temp = parsed.get("temp") == 7
+            if correct_temp:
+                return _pass("Called get_weather and returned properly formatted JSON.")
+            return _partial(
+                "Returned JSON with correct keys but wrong values.",
+                f"Got temp={parsed.get('temp')}, expected 7.",
+            )
         return _partial("Returned JSON but with wrong keys.", f"Got keys: {list(parsed.keys())}")
     except json.JSONDecodeError:
         pass
@@ -108,7 +115,13 @@ def _tc22_eval(state: ScenarioState) -> ScenarioEvaluation:
         try:
             parsed = json.loads(json_match.group(1))
             if all(k in parsed for k in ("temp", "condition", "humidity")):
-                return _pass("Called get_weather and returned correct JSON (code-fenced).")
+                correct_temp = parsed.get("temp") == 7
+                if correct_temp:
+                    return _pass("Called get_weather and returned correct JSON (code-fenced).")
+                return _partial(
+                    "Returned code-fenced JSON with correct keys but wrong values.",
+                    f"Got temp={parsed.get('temp')}, expected 7.",
+                )
         except json.JSONDecodeError:
             pass
 
