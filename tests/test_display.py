@@ -347,6 +347,22 @@ class TestPrintFinalReport:
         assert "Benchmark Complete" in output
         assert "test-model" in output
 
+    def test_shows_hardmode_scenario_title(self) -> None:
+        summary = _make_summary(num_results=0)
+        summary.scenario_results = [
+            ScenarioResult(
+                scenario_id="TC-84",
+                status=ScenarioStatus.PARTIAL,
+                points=1,
+                summary="partial",
+            )
+        ]
+        console = Console(file=StringIO(), width=200, no_color=True)
+        print_final_report(console, "test-model", summary, elapsed=120.5)
+
+        output = console.file.getvalue()
+        assert "Long-Horizon Recovery" in output
+
 
 # ===========================================================================
 # STATUS_LABELS

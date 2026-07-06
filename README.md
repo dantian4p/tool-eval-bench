@@ -178,6 +178,7 @@ tool-eval-bench --model gemma4 --backend vllm --base-url http://localhost:8080
 --backend BACKEND      Backend: vllm, litellm, llamacpp (default: from .env or vllm)
 --base-url URL         Server base URL (default: from .env)
 --api-key KEY          API key (optional)
+--version              Show tool-eval-bench version and exit
 --probe                Check server reachability and exit (0 = ready, 1 = not found)
 --temperature FLOAT    Temperature (default: 0.0)
 --no-think             Disable thinking/reasoning (sets enable_thinking=false via chat_template_kwargs)
@@ -715,8 +716,8 @@ tool-eval-bench compare-report runs/.../model_a_summary.md runs/.../model_b_summ
 
 ```bash
 ruff check .       # lint
-pytest             # 1,765 tests — scenario evaluators, plugins, storage, CLI, adapter
-                   # includes --cov-fail-under=55 coverage gate (current: 63%)
+.venv/bin/python -m pytest tests/ --ignore=tests/test_llama_benchy.py
+                   # 1,952 tests — scenario evaluators, plugins, storage, CLI, adapter
 ```
 
 ## Related Work

@@ -12,6 +12,7 @@ TC-63: Accumulating constraints (Category I expansion).
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from tool_eval_bench.domain.scenarios import (
@@ -344,8 +345,10 @@ def _tc54_eval(state: ScenarioState) -> ScenarioEvaluation:
     )
 
     answer = state.final_answer
-    # Expected: 425.80 * 149.50 ≈ 63,657
-    has_reasonable = _answer_contains_number(answer, "63") or _answer_contains_number(answer, "636")
+    # Expected: 425.80 * 149.50 ≈ 63,657 JPY. Accept nearby rounded values
+    # without allowing any arbitrary "63" substring to count as the result.
+    collapsed_answer = answer.replace(",", "")
+    has_reasonable = bool(re.search(r"(?<![\d.])636[0-9]{2}(?!\d)", collapsed_answer))
 
     if got_stock and searched_exchange and has_reasonable:
         return _pass("Combined stock price + exchange rate + calculation — creative composition.")

@@ -21,7 +21,11 @@ from tool_eval_bench.domain.scenarios import (
     ScenarioEvaluation,
     ScenarioStatus,
 )
-from tool_eval_bench.evals.helpers import asks_for_clarification, contains_refusal
+from tool_eval_bench.evals.helpers import (
+    answer_contains_number,
+    asks_for_clarification,
+    contains_refusal,
+)
 from tool_eval_bench.evals.scenarios import SCENARIOS
 from tool_eval_bench.evals.scenarios_adversarial import ADVERSARIAL_SCENARIOS
 from tool_eval_bench.evals.scenarios_agentic import AGENTIC_SCENARIOS
@@ -142,6 +146,35 @@ def test_very_long_answer(scenario):
 # ---------------------------------------------------------------------------
 # Heuristic function robustness
 # ---------------------------------------------------------------------------
+
+
+class TestAnswerContainsNumber:
+    """Numeric answer matching should not accept substrings inside larger numbers."""
+
+    @pytest.mark.parametrize(
+        ("answer", "value"),
+        [
+            ("London is 12°C.", "12"),
+            ("MSFT is trading at $412.78.", "412"),
+            ("The total is $7,450.40.", "7450"),
+            ("Processed 15,420 records.", "15,420"),
+            ("The ratio is 4.2%.", "4.2"),
+        ],
+    )
+    def test_detects_standalone_numbers(self, answer: str, value: str) -> None:
+        assert answer_contains_number(answer, value)
+
+    @pytest.mark.parametrize(
+        ("answer", "value"),
+        [
+            ("MSFT is trading at $412.78.", "12"),
+            ("The result was 156.", "56"),
+            ("Processed 154201 records.", "15420"),
+            ("Version 2.14.4 is deployed.", "14"),
+        ],
+    )
+    def test_rejects_digit_substrings(self, answer: str, value: str) -> None:
+        assert not answer_contains_number(answer, value)
 
 
 class TestContainsRefusal:

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tool-eval-bench"
-version = "2.0.7"
+version = "2.1.0"
 description = "Agentic tool-call benchmark for LLM serving stacks (vLLM, LiteLLM, llama.cpp)"
 readme = "README.md"
 license = {text = "MIT"}
@@ -103,4 +103,3 @@ exclude_lines = [
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
 ]
-

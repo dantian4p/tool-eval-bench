@@ -116,6 +116,13 @@ class TestResolveAllScenariosForIds:
         result = _resolve_all_scenarios_for_ids(["TC-01", "UNKNOWN-99"])
         assert [s.id for s in result] == ["TC-01"]
 
+    def test_resolves_hardmode_ids(self) -> None:
+        from tool_eval_bench.cli.bench import _resolve_all_scenarios_for_ids
+
+        result = _resolve_all_scenarios_for_ids(["TC-70", "TC-84"])
+        assert [s.id for s in result] == ["TC-70", "TC-84"]
+        assert all(s.category == Category.P for s in result)
+
     def test_empty_list_returns_empty(self) -> None:
         from tool_eval_bench.cli.bench import _resolve_all_scenarios_for_ids
 
@@ -348,6 +355,17 @@ class TestMakeParser:
         args = parser.parse_args(["--model", "m", "--base-url", "http://localhost:8000"])
         assert args.model == "m"
         assert args.base_url == "http://localhost:8000"
+
+    def test_version_flag(self, capsys: pytest.CaptureFixture[str]) -> None:
+        from tool_eval_bench import __version__
+        from tool_eval_bench.cli.bench import _make_parser
+
+        parser = _make_parser()
+        with pytest.raises(SystemExit) as exc_info:
+            parser.parse_args(["--version"])
+
+        assert exc_info.value.code == 0
+        assert f"tool-eval-bench {__version__}" in capsys.readouterr().out
 
     def test_defaults(self) -> None:
         from tool_eval_bench.cli.bench import _make_parser

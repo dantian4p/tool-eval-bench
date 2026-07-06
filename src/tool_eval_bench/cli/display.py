@@ -29,7 +29,7 @@ from tool_eval_bench.domain.scenarios import (
 )
 from tool_eval_bench.evals.scenarios import (
     ALL_DISPLAY_DETAILS,
-    ALL_SCENARIOS,
+    ALL_SCENARIOS_WITH_HARDMODE,
 )
 
 # ---------------------------------------------------------------------------
@@ -476,7 +476,7 @@ def print_final_report(
     for r in summary.scenario_results:
         label, status_color = STATUS_LABELS.get(r.status, ("?", "white"))
         status_text = f"[bold {status_color}]{label}[/]"
-        title = next((s.title for s in ALL_SCENARIOS if s.id == r.scenario_id), "?")
+        title = next((s.title for s in ALL_SCENARIOS_WITH_HARDMODE if s.id == r.scenario_id), "?")
         display_detail = ALL_DISPLAY_DETAILS.get(r.scenario_id)
 
         if r.status == ScenarioStatus.PASS:

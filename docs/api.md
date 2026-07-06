@@ -184,6 +184,7 @@ no models, etc.), the errors use structured codes from
 | `detection_failed` | Probing exception |
 | `invalid_response` | Non-JSON response |
 | `no_models` | Empty model list |
+| `model_not_available` | Model is listed but fails a pre-flight inference request |
 | `no_server` | Auto-discovery found nothing |
 
 ## Machine-Readable Args Schema

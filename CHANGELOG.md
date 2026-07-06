@@ -2,10 +2,12 @@
 
 All notable changes to `tool-eval-bench` are documented here.
 
-## [Unreleased]
+## [2.1.0] — 2026-07-06
 
 ### Added
 
+- **`--version` CLI flag** — prints the installed `tool-eval-bench` version and
+  exits, matching the documented release smoke-test checklist.
 - **`compare-report` CLI subcommand** — generate a browser HTML comparison
   from two existing Markdown benchmark reports:
   `tool-eval-bench compare-report a_summary.md b_summary.md -o comparison.html`.
@@ -22,6 +24,23 @@ All notable changes to `tool-eval-bench` are documented here.
 
 ### Fixed
 
+- **Numeric answer-content checks no longer accept digit substrings** — the
+  shared `answer_contains_number()` helper now uses numeric-span matching
+  instead of raw substring search.  This prevents false positives such as
+  accepting `12` from `$412.78`, `56` from `156`, or `15420` from `154201`
+  while still accepting comma-formatted values and decimal continuations
+  used in existing evaluator checks.
+- **Hard Mode scenario reconstruction** — `_resolve_all_scenarios_for_ids()`
+  now searches `ALL_SCENARIOS_WITH_HARDMODE`, so resume/merged-score paths no
+  longer drop Category P IDs such as TC-70 or TC-84.  The static final report
+  also resolves Hard Mode titles instead of displaying `?`.
+- **`--spec-live` graceful shutdown
+  ([#23](https://github.com/SeraphimSerapis/tool-eval-bench/pull/23))** —
+  termination signals now stop the live monitor reliably: active metrics
+  scrapes are cancelled on first SIGINT/SIGTERM/SIGHUP, a second termination
+  signal forces exit after best-effort terminal restoration, SIGHUP skips the
+  dead-terminal summary path, and installed signal handlers are detached on
+  normal shutdown.
 - **Pre-flight model availability check (#19)** — when a server lists a model
   in `/v1/models` but fails to actually serve it (e.g. vLLM returns 400
   "Model not found" on inference), the benchmark previously produced
@@ -57,7 +76,7 @@ All notable changes to `tool-eval-bench` are documented here.
   TC-16 exempts the German error-handling path (tool returned HTTP error,
   no data to surface); TC-22 now validates JSON values, not just key
   presence.  28 new tests added (14 in `test_tc09_tc27_answer_check.py`,
-  14 in `test_answer_content_partial.py`).  Test count: **1,935**.
+  14 in `test_answer_content_partial.py`).  Test count: **1,952**.
 
 ### Changed
 

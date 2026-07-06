@@ -78,9 +78,10 @@ def includes_text(value: Any, expected: str) -> bool:
 
 
 def answer_contains_number(answer: str, value: str) -> bool:
-    """Check if a number (ignoring commas) appears in the answer."""
+    """Check if a number (ignoring commas) appears as a standalone numeric span."""
     collapsed = answer.replace(",", "").lower()
-    return value.replace(",", "").lower() in collapsed
+    needle = re.escape(value.replace(",", "").lower())
+    return bool(re.search(rf"(?<![\d.]){needle}(?!\d)", collapsed))
 
 
 # ---------------------------------------------------------------------------

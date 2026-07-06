@@ -28,9 +28,15 @@ from __future__ import annotations
 from typing import Any
 
 # Argument schema version — bump when adding/removing/renaming args.
-SCHEMA_VERSION = "2"
+SCHEMA_VERSION = "3"
 
 ARGS_SCHEMA: list[dict[str, Any]] = [
+    {
+        "name": "version",
+        "type": "bool",
+        "default": False,
+        "description": "Show tool-eval-bench version and exit",
+    },
     # -- Connection --
     {
         "name": "model",

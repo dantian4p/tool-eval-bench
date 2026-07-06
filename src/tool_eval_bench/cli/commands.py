@@ -56,7 +56,7 @@ def resolve_all_scenarios_for_ids(
     Used when reconstructing merged summaries from service-returned dicts
     (e.g. after resume merge) where we need the full definitions for scoring.
     """
-    from tool_eval_bench.evals.scenarios import ALL_SCENARIOS
+    from tool_eval_bench.evals.scenarios import ALL_SCENARIOS_WITH_HARDMODE
 
-    by_id = {s.id: s for s in ALL_SCENARIOS}
+    by_id = {s.id: s for s in ALL_SCENARIOS_WITH_HARDMODE}
     return [by_id[sid] for sid in scenario_ids if sid in by_id]

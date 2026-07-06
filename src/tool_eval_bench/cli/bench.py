@@ -1553,8 +1553,17 @@ def _make_parser() -> argparse.ArgumentParser:
     sys.argv).
     """
     parser = argparse.ArgumentParser(
+        prog="tool-eval-bench",
         description="Run tool-eval-bench agentic tool-call benchmark",
         formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    from tool_eval_bench import __version__
+
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+        help="Show tool-eval-bench version and exit",
     )
 
     # -- Connection --------------------------------------------------------
