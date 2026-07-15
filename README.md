@@ -78,6 +78,36 @@ uv tool install 'tool-eval-bench[perf] @ git+https://github.com/SeraphimSerapis/
 tool-eval-bench --help
 ```
 
+### Run with Docker
+
+No local Python setup required — build once, then run against any
+OpenAI-compatible endpoint reachable from the container:
+
+```bash
+git clone https://github.com/SeraphimSerapis/tool-eval-bench.git
+cd tool-eval-bench
+
+docker compose build
+
+# Point it at your server: copy the config template and fill in the target
+# (same TOOL_EVAL_* variables as the Configuration section below)
+cp .env.example .env
+# edit .env: TOOL_EVAL_HOST=<ip>, TOOL_EVAL_PORT=<port>, TOOL_EVAL_API_KEY=<token>
+
+# Check the endpoint is reachable (default command)
+docker compose run --rm tool-eval-bench --probe
+
+# Run the benchmark — any CLI flag works here too
+docker compose run --rm tool-eval-bench --short --seed 42
+```
+
+Reports land in `./runs/` on the host, matching the CLI's own default output
+path (`./runs/YYYY/MM/`) — `docker-compose.yaml` mounts that directory
+directly, so `--output-dir` never needs to be passed explicitly and results
+survive `--rm` cleaning up the container.
+
+Build with the throughput/HF-dataset extras via `docker compose build --build-arg EXTRAS=perf,hf`.
+
 ### Development setup
 
 ```bash
