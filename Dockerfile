@@ -14,8 +14,8 @@ COPY src ./src
 ARG EXTRAS=""
 RUN pip install --no-cache-dir .$( [ -n "$EXTRAS" ] && echo "[$EXTRAS]" )
 
-RUN mkdir -p /app/reports
-VOLUME ["/app/reports"]
+RUN mkdir -p /app/runs
+VOLUME ["/app/runs"]
 
 ENTRYPOINT ["tool-eval-bench"]
 CMD ["--help"]
