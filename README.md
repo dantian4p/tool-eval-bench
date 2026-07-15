@@ -78,6 +78,16 @@ uv tool install 'tool-eval-bench[perf] @ git+https://github.com/SeraphimSerapis/
 tool-eval-bench --help
 ```
 
+### Development setup
+
+```bash
+git clone https://github.com/SeraphimSerapis/tool-eval-bench.git
+cd tool-eval-bench
+python -m venv .venv
+source .venv/bin/activate
+pip install -e '.[dev,perf,hf]'
+```
+
 ### Run with Docker
 
 No local Python setup required — build once, then run against any
@@ -107,16 +117,6 @@ directly, so `--output-dir` never needs to be passed explicitly and results
 survive `--rm` cleaning up the container.
 
 Build with the throughput/HF-dataset extras via `docker compose build --build-arg EXTRAS=perf,hf`.
-
-### Development setup
-
-```bash
-git clone https://github.com/SeraphimSerapis/tool-eval-bench.git
-cd tool-eval-bench
-python -m venv .venv
-source .venv/bin/activate
-pip install -e '.[dev,perf,hf]'
-```
 
 ### Updating
 
