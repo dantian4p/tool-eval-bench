@@ -97,12 +97,14 @@ OpenAI-compatible endpoint reachable from the container:
 git clone https://github.com/SeraphimSerapis/tool-eval-bench.git
 cd tool-eval-bench
 
-docker compose build
-
 # Point it at your server: copy the config template and fill in the target
 # (same TOOL_EVAL_* variables as the Configuration section below)
 cp .env.example .env
-# edit .env: TOOL_EVAL_HOST=<ip>, TOOL_EVAL_PORT=<port>, TOOL_EVAL_API_KEY=<token>
+# edit .env: set TOOL_EVAL_BASE_URL, or set TOOL_EVAL_HOST/TOOL_EVAL_PORT;
+# also set TOOL_EVAL_API_KEY when the endpoint requires authentication
+
+# Compose validates env_file entries before any command, so .env must exist first
+docker compose build
 
 # Check the endpoint is reachable (default command)
 docker compose run --rm tool-eval-bench --probe
